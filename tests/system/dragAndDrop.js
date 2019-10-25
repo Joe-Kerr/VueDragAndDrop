@@ -189,7 +189,7 @@ test("clone of aboslute draggable renders before mousemove when viewport not at 
 		.perform();		
 });
 
-test.only("clone has same dimension as element", async ()=>{
+test("clone has same dimension as element", async ()=>{
 	const {By} = testSuite;
 	const elDim = await to.draggableFree.getRect();
 	
