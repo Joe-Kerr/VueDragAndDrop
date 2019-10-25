@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="pragma" content="no-cache">			
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'  https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js" />
+
+		
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js"></script>
+		
+		<!--
+		<script src="../src/directive.js"></script>
+		-->
+		
+		<style>			
+			body {
+				width: 2048px;
+				height: 2048px;
+			}
+			
+			.draggable {				
+				width: 120px;
+				height: 40px;
+				
+				border: 1px solid blue;
+				z-index: 2;
+				background-color: white;
+			}
+			
+			.droppable {
+
+				margin: 10px;
+				padding: 3px;
+				border: 1px solid red;
+				z-index: 1;
+				
+			}
+			
+			div > span {
+				background-color: #efefa1;
+			}
+						
+			div > p {
+				background-color: #c4f1c4;
+			}
+			
+			#draggableWith {
+			
+			}
+			
+			#draggableWithout {
+				position: absolute;
+			}
+			
+			#droppableOuter {
+				position: absolute;
+				top: 50px;
+				left: 200px;
+				width: 300px;
+				height: 300px;	
+				background-color: #cecece;
+			}
+			
+			#droppableInner {
+				width: 150px;
+				height: 100px;
+				background-color: #f5f5f5;				
+				
+			}
+			
+			#exWife {
+				border: 1px solid grey;
+				width: 225px;
+				height: 150px;		
+				margin: 10px;
+				background-color: #e0e0e0;
+			}
+			
+			#log {
+				position: absolute;
+				top: 450px;
+				left: 200px;				
+			}
+			
+		</style>
+
+		<title>ready</title>
+	</head>
+
+<body>
+
+<div id="v"></div>
+
+<script src="../../dist/dragAndDrop.umd.js"></script>
+
+<script>
+
+const installer = dragAndDrop.installer;
+
+
+(function() {
+	const store = new Vuex.Store({
+		state: {
+			log: "",
+			fires: 0
+		},
+		actions: {
+			draggableOuterToDroppableOuter(store, data) {
+				
+				store.state.log = "draggableOuterToDroppableOuter";
+				store.state.fires += 1;
+			},
+			
+			draggableBothToDroppableOuter(store, data) {
+				
+				store.state.log = "draggableBothToDroppableOuter";
+				store.state.fires += 1;
+			},	
+			
+			draggableInnerToDroppableInner(store, data) {
+				
+				store.state.log = "draggableInnerToDroppableInner";
+				store.state.fires += 1;
+			},
+			
+			draggableBothToDroppableInner(store, data) {
+				
+				store.state.log = "draggableBothToDroppableInner";
+				store.state.fires += 1;
+			},
+			
+			shouldNeverFire(store, data) {
+				
+				store.state.log = "shouldNeverFire";
+				store.state.fires += 1;
+			}	
+		}
+	});
+	
+	Vue.use(installer, {vuex: store})  
+
+	window.v = new Vue({
+		el: "#v",
+		store,
+		template: `
+			<section>
+				<div v-drag&drop:draggable="{type: 'draggableToOuter'}" id="draggableToOuter" class="draggable">draggableToOuter</div>
+				<div v-drag&drop:draggable="{type: 'draggableToInner'}" id="draggableToInner" class="draggable">draggableToInner</div>
+				<div v-drag&drop:draggable="{type: 'draggableToBoth'}" id="draggableToBoth" class="draggable">draggableToBoth</div>
+				
+				
+				<div v-drag&drop:draggable="{type: 'draggableDroppable'}" 
+					 v-drag&drop:droppable="{type: 'droppableForDraggableDroppable'}" 
+					 id="draggableDroppable" 
+					 class="draggable"
+					 style="position: absolute; right: 0px;"
+				>draggable and droppable</div>
+				
+				<div v-drag&drop:draggable.only="{dragstop: move}" id="draggableFree" class="draggable" :style="{left: x+'px', top: y+'px', position:'absolute'}">Draggable without droppable</div>
+				
+				<div v-drag&drop:draggable.only="{dragstop: move2}" id="draggableFreeFixed" class="draggable" :style="{left: x2+'px', top: y2+'px', position:'fixed'}">Draggable wo droppable (fixed)</div>
+				
+				<div v-drag&drop:droppable="{type: 'theOuterDroppable'}" id="droppableOuter" class="droppable">
+					<span>Drop target outer</span>
+					
+					<div v-drag&drop:droppable.greedy id="exWife">
+						<span>obstructing element</span>
+						
+						<div v-drag&drop:droppable.greedy="{type: 'theInnerDroppable'}" id="droppableInner" class="droppable">
+							<span>Drop target inner greedy</span>
+							<p id="overlappingNonObstructing">overlapping but non-obstructing element</p>
+						</div>	
+						
+					</div>
+					
+					<div v-drag&drop:droppable="{type: 'theInnerDroppable'}" id="droppableInnerFree" class="droppable">
+						<span>Drop target inner free</span>
+						<p>overlapping but non-obstructing element</p>
+					</div>						
+					
+				</div>
+				
+				<div id="log">{{log}} {{fires}}</div>
+				<button @click="reset" id="reset" :style="{position: 'fixed', rigt: '0px', bottom: '0px'}">r</button>
+				
+			</section>
+		`,
+		watch: {
+			log(val) {
+				if(val !== "") {
+					//setTimeout(()=>{this.$store.state.log=""}, 1000);
+				}
+			}
+		},
+		computed: {
+			log() {return this.$store.state.log;},
+			fires() {return this.$store.state.fires;}
+		},
+		data() {
+			return {
+				x: 130, 
+				y: 0,
+				x2: 260,
+				y2: 0
+			}
+		},
+		methods: {
+			move(event, data) {
+				this.x = data.draggableNewX;
+				this.y = data.draggableNewY;
+				//console.error(JSON.stringify(data))
+			},
+			move2(event, data) {
+				this.x2 = data.draggableNewX;
+				this.y2 = data.draggableNewY;
+				//console.error(JSON.stringify(data))
+			},
+			reset() {
+				document.title = "reloading";
+				window.location.reload(false);
+			}
+		},
+		
+		mounted() {					
+			this.$store.dispatch("drag&drop/register", {dragType: "draggableToOuter", dropType: "theOuterDroppable", action: "draggableOuterToDroppableOuter"});
+			this.$store.dispatch("drag&drop/register", {dragType: "draggableToBoth", dropType: "theOuterDroppable", action: "draggableBothToDroppableOuter"});			
+			
+			this.$store.dispatch("drag&drop/register", {dragType: "draggableToInner", dropType: "theInnerDroppable", action: "draggableInnerToDroppableInner"});
+			this.$store.dispatch("drag&drop/register", {dragType: "draggableToBoth", dropType: "theInnerDroppable", action: "draggableBothToDroppableInner"});
+			
+			this.$store.dispatch("drag&drop/register", {dragType: "draggableDroppable", dropType: "droppableForDraggableDroppable", action: "shouldNeverFire"});
+			
+		}
+	
+	});
+})()
+</script>
+
+</body>
+</html>

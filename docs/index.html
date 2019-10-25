@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="pragma" content="no-cache">			
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'  https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js" />
+
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js"></script>		
+		<script src="./dragAndDrop.umd.js"></script>
+		
+		<style>			
+			body {
+				user-select: none;
+			}
+			
+			.draggable {				
+
+			}
+			
+			.droppable {
+
+				margin: 10px;
+				padding: 3px;
+				border: 1px solid red;
+				z-index: 1;
+				
+			}
+			
+			div > span {
+				background-color: #efefa1;
+			}
+			
+			#theDraggable {
+				width: 50px;
+				height: 50px;
+				border-radius: 50%;
+				
+				border: 1px solid blue;
+				z-index: 2;
+				background-color: white;
+			
+			}
+			
+			#theDraggable > div {
+				width: 50%;
+				margin: 0 auto;
+			}
+			
+			#blocker {
+				border: 1px solid grey;
+				width: 225px;
+				height: 150px;		
+				margin: 10px;
+				background-color: #e0e0e0;
+				opacity: 0.9
+			}
+			
+			#log {
+				position: fixed;
+				bottom: 0px;
+				max-height:	150px;
+				width: 98%;
+
+				background-color: #f1f1f1;
+				border-style: groove;
+				border-color: #fdfdfd;				
+			}
+			
+			.logHeader {
+				height: 30px;
+				width: 99%;
+				background-color: #c7c7c7;
+				padding: 5px;	
+			}
+			
+			.logHeader div {
+				cursor: pointer;
+				color: #ffffff;
+				text-shadow: 1px 1px 2px rgba(150, 150, 150, 1);
+			}
+			
+			.logContent {
+				max-height: 120px;
+				overflow: auto;
+			}
+			
+			.logContent p {
+				margin: 0;
+			}
+
+			
+			#scene {
+				width: 120px; 
+				height: 120px;
+				margin-left: 100px;
+				margin-top: 100px;
+			}
+			
+			#help {
+				width: 2048px;
+				height: 2048px;
+				position: absolute;				
+				
+			}
+			
+			.helpHelp {
+				position: absolute;
+				left: 0px;
+				bottom: 0px;
+				font-style: italic;
+				margin: 10px;				
+			}			
+		</style>
+		
+		
+		<style>
+			.spinner div {
+				position: absolute;
+				width: 120px;
+				height: 120px;
+				border: 1px solid #ccc;
+				background: rgba(255,255,255,0.8);
+				box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+				text-align: center;
+				line-height: 120px;
+				font-size: 100px;
+			}
+
+			.spinner .face1 { 
+				-webkit-transform: translateZ(60px);
+				-ms-transform: translateZ(60px);
+				transform: translateZ(60px);
+			}
+			.spinner .face2 { 
+				-webkit-transform: rotateY(90deg) translateZ(60px); 
+				-ms-transform: rotateY(90deg) translateZ(60px); 
+				transform: rotateY(90deg) translateZ(60px); 
+			}
+			.spinner .face3 { 
+				-webkit-transform: rotateY(90deg) rotateX(90deg) translateZ(60px); 
+				-ms-transform: rotateY(90deg) rotateX(90deg) translateZ(60px); 
+				transform: rotateY(90deg) rotateX(90deg) translateZ(60px); 
+			}
+			.spinner .face4 { 
+				-webkit-transform: rotateY(180deg) rotateZ(90deg) translateZ(60px); 
+				-ms-transform: rotateY(180deg) rotateZ(90deg) translateZ(60px); 
+				transform: rotateY(180deg) rotateZ(90deg) translateZ(60px); 
+			}
+			.spinner .face5 { 
+				-webkit-transform: rotateY(-90deg) rotateZ(90deg) translateZ(60px); 
+				-ms-transform: rotateY(-90deg) rotateZ(90deg) translateZ(60px); 
+				transform: rotateY(-90deg) rotateZ(90deg) translateZ(60px); 
+			}
+			.spinner .face6 { 
+				-webkit-transform: rotateX(-90deg) translateZ(60px); 
+				-ms-transform: rotateX(-90deg) translateZ(60px); 
+				transform: rotateX(-90deg) translateZ(60px); 
+			}
+
+			.spinner {
+				-webkit-animation: spincube 12s ease-in-out infinite;
+				animation: spincube 12s ease-in-out infinite;
+				-webkit-transform-style: preserve-3d;
+				-ms-transform-style: preserve-3d;
+				transform-style: preserve-3d;
+				-webkit-transform-origin: 60px 60px 0;
+				-ms-transform-origin: 60px 60px 0;
+				transform-origin: 60px 60px 0;
+			}
+
+			@-webkit-keyframes spincube {
+				16%      { -webkit-transform: rotateY(-90deg);                }
+				33%      { -webkit-transform: rotateY(-90deg) rotateZ(90deg); }
+				50%      { -webkit-transform: rotateY(180deg) rotateZ(90deg); }
+				66%      { -webkit-transform: rotateY(90deg) rotateX(90deg);  }
+				83%      { -webkit-transform: rotateX(90deg);                 }
+			}
+			@keyframes spincube {
+				16%      { -ms-transform: rotateY(-90deg); transform: rotateY(-90deg); }
+				33%      { -ms-transform: rotateY(-90deg) rotateZ(90deg); transform: rotateY(-90deg) rotateZ(90deg); }
+				50%      { -ms-transform: rotateY(180deg) rotateZ(90deg); transform: rotateY(180deg) rotateZ(90deg); }
+				66%      { -ms-transform: rotateY(90deg) rotateX(90deg); transform: rotateY(90deg) rotateX(90deg); }
+				83%      { -ms-transform: rotateX(90deg); transform: rotateX(90deg); }
+			}		
+		</style>
+		
+	</head>
+
+<body oncontextmenu="return false;">
+
+<div id="v"></div>
+
+<script>
+
+const installer = dragAndDrop.installer;
+
+
+(function() {
+	const store = new Vuex.Store({
+		state: {
+			log: []
+		},
+		actions: {
+
+			draggableOverOdd(store, data) {
+				//Quick and dirty; use mutations in production!
+				store.state.log.unshift({type: "odd", number: data.droppableData});			
+			},
+			draggableOverEven(store, data) {
+				//Quick and dirty; use mutations in production!
+				store.state.log.unshift({type: "even", number: data.droppableData});	
+			},
+			draggableOverTable(store, data) {
+				//Quick and dirty; use mutations in production!
+				store.state.log.unshift({type: "table"});	
+			},			
+		}
+	});
+	
+	Vue.use(installer, {vuex: store}) 
+
+	window.v = new Vue({
+		el: "#v",
+		store,
+		template: `
+			<section>
+				<svg v-if="help" id="help">
+					<path d="M50 50 L60 60 L120 60" fill="none" stroke="#000000" stroke-width="2" />
+					<text x="120" y="60" fill="red">draggable</text>
+					
+					<path d="M200 150 L210 140 L370 140" fill="none" stroke="#000000" stroke-width="2" />
+					<text x="370" y="140" fill="red">droppables, odd numbers are greedy</text>
+					
+					<path d="M400 200 L410 190 L530 190 " fill="none" stroke="#000000" stroke-width="2" />
+					<text x="530" y="190" fill="red">draggable greedy droppable</text>
+				</svg>
+				
+				<div v-drag&drop:draggable="{type: 'theDraggable'}" id="theDraggable" class="draggable">
+					<div></div>
+				</div>
+				
+				
+
+				
+				<div v-show="log.length > 0" id="log">
+					<div class="logHeader">
+						<div @click="clearLog">clear</div>
+					</div>
+					<div class="logContent">
+						<p v-for="item in log">
+							<span v-if="item.type !== 'table'">Dropped over {{item.type}} number #{{item.number}}</span>
+							<span v-else>Dropped over cube container</span>
+						</p>
+					</div>
+				</div>
+				
+				<div v-if="help" class="helpHelp">click to dismiss help</div>
+				
+				
+				<div id="scene" v-drag&drop:droppable="{type: 'table'}">
+					<div class="spinner">
+						<div v-drag&drop:droppable.greedy="{type: 'odd', data: 1}" class="face1">1</div>
+						<div v-drag&drop:droppable="{type: 'even', data: 2}" class="face2">2</div>
+						<div v-drag&drop:droppable.greedy="{type: 'odd', data: 3}" class="face3">3</div>
+						<div v-drag&drop:droppable="{type: 'even', data: 4}" class="face4">4</div>
+						<div v-drag&drop:droppable.greedy="{type: 'odd', data: 5}" class="face5">5</div>
+						<div v-drag&drop:droppable="{type: 'even', data: 6}" class="face6">6</div>
+					</div>
+				</div>				
+
+
+				<div 
+					v-drag&drop:draggable.only="{dragstop:moveDropBlock}" 
+					v-drag&drop:droppable.greedy 
+					id="blocker" 
+					:style="{left: dropBlockX+'px', top: dropBlockY+'px', position:'absolute'}"
+				>				
+			
+				</div>
+				
+				
+			</section>
+		`,
+		computed: {
+			log() {return this.$store.state.log;}
+		},
+		data() {
+			return {
+				dropBlockX: 300,
+				dropBlockY: 200,
+				help: true
+			}
+		},
+		methods: {
+			clearLog() {
+				this.$store.state.log.splice(0, this.$store.state.log.length);
+			},
+			moveDropBlock(event, data) {
+				this.dropBlockX = data.draggableNewX;
+				this.dropBlockY = data.draggableNewY;				
+			},
+		},
+		
+		mounted() {			
+			this.$store.dispatch("drag&drop/register", {dragType: "theDraggable", dropType: "table", action: "draggableOverTable"});
+			this.$store.dispatch("drag&drop/register", {dragType: "theDraggable", dropType: "odd", action: "draggableOverOdd"});
+			this.$store.dispatch("drag&drop/register", {dragType: "theDraggable", dropType: "even", action: "draggableOverEven"});
+			
+			_this = this;
+			document.addEventListener("mousedown", function inline_once(){
+				_this.help = false;
+				document.removeEventListener("mousedown", inline_once, true);
+			}, true);
+		}
+	
+	});
+})()
+</script>
+
+</body>
+</html>

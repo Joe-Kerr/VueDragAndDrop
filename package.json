@@ -1,0 +1,31 @@
+{
+  "name": "@joe_kerr/vue-drag-and-drop",
+  "version": "1.0.0",
+  "description": "Vue plugin for complex drag and drop logic.",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "author": "joe_kerr / Joe-Kerr",
+  "license": "MIT",
+  "repository": "github:Joe-Kerr/VueDragAndDrop",
+  "dependencies": {
+    "cats4vue": "^1.0.4",
+    "vuex-heman": "^1.5.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.12.1",
+    "@vue/cli-plugin-pwa": "^3.12.1",
+    "@vue/cli-plugin-unit-mocha": "^3.12.1",
+    "@vue/cli-service": "^3.12.1",
+    "@vue/test-utils": "1.0.0-beta.29",
+    "chai": "^4.1.2",
+    "jsdom": "^15.2.0",
+    "less": "^3.10.3",
+    "less-loader": "^4.1.0",
+    "sinon": "^7.5.0",
+    "vue-template-compiler": "^2.5.21"
+  },
+  "scripts": {
+    "dev:test:unit": "vue-cli-service test:unit --ui qunit --recursive tests/unit/**/*.js",
+    "dev:build": "vue-cli-service build --target lib --name dragAndDrop --entry ./src/index.js --dest ./dist"
+  }
+}

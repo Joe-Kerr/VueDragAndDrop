@@ -1,0 +1,61 @@
+ MOCHA  Testing...
+
+
+
+  directive.js
+    √ directive returns install function
+    √ directive installer returns object with properties inserted and unbind
+    √ inserted calls dragAndDrop with correct parameters
+    √ unbind calls dragAndDrop with correct parameters
+    √ directive throws if arg is not 'draggable' / 'droppable'
+    √ directive throws if the selector option does not return DOM element
+    √ directive throws if an undefined event is received in the store callback
+
+  dragAndDrop.js - Integration testing
+    √ clone setup and cleanup (266ms)
+    √ all adhoc event listeners cleaned up (182ms)
+    √ all delegate event listeners cleaned up
+    √ all droppable mouseup callbacks fire before evaluation function
+    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (344ms)
+    √ draggable callback receives all draggable parameters (342ms)
+    √ droppable callback receives all parameters (338ms)
+    √ optional custom dragstart callback fires (338ms)
+    √ optional custom dragstop callback fires when not over droppable (338ms)
+    √ optional custom dragstop callback fires when over droppable (334ms)
+    √ optional custom drag callback fires (481ms)
+
+  dragAndDrop.js
+    √ addEventListener calls config parser with config parameter
+    √ addEventListener stores draggable listener information
+    √ addEventListener adds draggable event listener
+    √ addEventListener stores droppable listener information
+    √ addEventListener adds droppable event listener
+    √ removeEventListener calls mode verifier with mode parameter
+    √ removeEventListener sets draggableGotRemoved if mid dragging
+    √ removeEventListener removes draggable listener
+    √ removeEventListener removes droppable listener
+    √ removeEventListener throws if element parameter not found in listeners list
+
+  index.js
+    √ index.js provides expected exports
+    √ installer calls all utility functions
+    √ installer registers store with correct namespace
+    √ installer registers directive with correct name
+
+  store.js
+    √ getters.dragging returns true or false
+    √ getters.draggableId returns id of draggable if dragging, or null if not
+    √ getters.draggableType returns type of draggable if dragging, or null if not
+    √ mutations.set uses correct function
+    √ mutations.addCallback adds new callback types
+    √ actions.draggable inits state with manadatory event parameters
+    √ actions.draggable inits state with optional event parameters
+    √ actions.droppable dispatches callback action for matching drag/drop types
+    √ actions.droppable passes through data parameter to user action
+    √ actions.done resets state
+    √ actions.register throws for missing parameters
+
+
+  43 passing (3s)
+
+ MOCHA  Tests completed successfully
