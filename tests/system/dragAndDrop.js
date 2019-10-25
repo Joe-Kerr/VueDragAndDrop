@@ -189,6 +189,37 @@ test("clone of aboslute draggable renders before mousemove when viewport not at 
 		.perform();		
 });
 
+test.only("clone has same dimension as element", async ()=>{
+	const {By} = testSuite;
+	const elDim = await to.draggableFree.getRect();
+	
+	let borderWidth = await to.draggableFree.getCssValue("borderWidth");
+	borderWidth = parseInt(borderWidth.replace("px", "")) * 2;
+	
+	const mx0 = elDim.x;
+	const my0 = elDim.y;		
+	const mxEnd = 400;
+	const myEnd = 300;
+	
+	await driver.executeScript("window.scroll(21,32);");
+	
+	await driver.actions({async: true})
+		.move({x: mx0, y: my0}) 
+		.press()
+		.move({duration: 100, x: mxEnd, y: myEnd})
+		.pause(1)
+		.perform();
+		
+	const clone = await driver.findElement(By.id("cloned_draggableFree"));	
+	const cloneDim = await clone.getRect();
+	
+	assert.equal(cloneDim.width, elDim.width+borderWidth);
+	assert.equal(cloneDim.height, elDim.height+borderWidth);
+	
+	await driver.actions({async: true})	
+		.release()
+		.perform();	
+});
 
 //draggableOuter over outer
 test("draggable over matching droppable fires", async ()=>{

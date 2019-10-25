@@ -586,8 +586,8 @@ function () {
       return {
         x: x,
         y: y,
-        width: originalRect.w,
-        height: originalRect.h
+        width: originalRect.width,
+        height: originalRect.height
       };
     } /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
     ///  Solutions are not really great. For now, leave it as heuristic carbon copy.

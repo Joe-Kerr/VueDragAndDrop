@@ -83,7 +83,7 @@ class DragAndDrop {
 		const x = (elPos === "fixed") ? originalRect.x+window.pageXOffset : originalRect.x;
 		const y = (elPos === "fixed") ? originalRect.y+window.pageYOffset : originalRect.y;
 		
-		return {x, y, width: originalRect.w, height: originalRect.h};
+		return {x, y, width: originalRect.width, height: originalRect.height};
 	}
 	
 	/// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
@@ -118,7 +118,7 @@ class DragAndDrop {
 		const originalRect = this._getRect(el);
 		const x = originalRect.x;
 		const y = originalRect.y;
-		
+	
 		clone = (type === "copy") ? this._createCopyClone(el, event, originalRect) : this._createCheapClone(el, event, originalRect);
 		clone.id = "cloned_"+clone.id;			
 		clone.style.left = x+"px";
@@ -132,7 +132,7 @@ class DragAndDrop {
 		
 		event._cloneStartX = x;
 		event._cloneStartY = y;
-		
+	
 		document.body.appendChild(clone);
 	}
 	
