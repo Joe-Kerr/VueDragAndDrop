@@ -518,20 +518,6 @@ var dragAndDropParameters = {
   _cloneStartX: null,
   _cloneStartY: null
 };
-Object.defineProperty(dragAndDropParameters, "elDraggable", {
-  get: function get() {
-    console.error("DEPRECATED: use dragAndDropParameters.draggableEl instead of .elDraggable");
-    return dragAndDropParameters.draggableEl;
-  },
-  enumerable: false
-});
-Object.defineProperty(dragAndDropParameters, "elDroppable", {
-  get: function get() {
-    console.error("DEPRECATED: use dragAndDropParameters.droppableEl instead of .elDroppable");
-    return dragAndDropParameters.droppableEl;
-  },
-  enumerable: false
-});
 
 var defaultDragging = function defaultDragging(_event) {
   var dnd = dragAndDropParameters;
@@ -620,6 +606,7 @@ function () {
 
       var x = originalRect.x;
       var y = originalRect.y;
+      var pos = originalRect.position;
       clone = type === "copy" ? this._createCopyClone(el, event, originalRect) : this._createCheapClone(el, event, originalRect);
       clone.id = "cloned_" + clone.id;
       clone.style.left = x + "px";
@@ -627,6 +614,11 @@ function () {
       clone.style.width = originalRect.width + "px";
       clone.style.height = originalRect.height + "px";
       clone.style.pointerEvents = "none";
+
+      if (pos !== "fixed" && pos !== "absolute") {
+        clone.style.position = "absolute";
+      }
+
       event._cloneStartX = x;
       event._cloneStartY = y;
       document.body.appendChild(clone);
@@ -809,11 +801,6 @@ function () {
       this._setupClone(el, dragAndDropParameters, "copy");
 
       this._setTempStyle();
-
-      if (data.options !== undefined && data.options.dragging !== undefined) {
-        config.drag = data.options.dragging;
-        console.error("DEPRECATED: do not use 'data.options.dragging' but 'config.drag'");
-      }
 
       if (typeof config.drag === "function") {
         dragging = config.drag;

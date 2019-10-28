@@ -101,6 +101,7 @@ class DragAndDrop {
 		const originalRect = this._getRect(el);
 		const x = originalRect.x;
 		const y = originalRect.y;
+		const pos = originalRect.position;
 	
 		clone = (type === "copy") ? this._createCopyClone(el, event, originalRect) : this._createCheapClone(el, event, originalRect);
 		clone.id = "cloned_"+clone.id;			
@@ -109,6 +110,10 @@ class DragAndDrop {
 		clone.style.width = originalRect.width+"px";
 		clone.style.height = originalRect.height+"px";
 		clone.style.pointerEvents = "none";
+		
+		if(pos !== "fixed" && pos !== "absolute") {
+			clone.style.position = "absolute";
+		}
 		
 		event._cloneStartX = x;
 		event._cloneStartY = y;
