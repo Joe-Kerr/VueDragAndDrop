@@ -27,23 +27,6 @@ const dragAndDropParameters = {
 	_cloneStartY: null
 };
 
-Object.defineProperty(dragAndDropParameters, "elDraggable", {
-	get() {
-		console.error("DEPRECATED: use dragAndDropParameters.draggableEl instead of .elDraggable");
-		return dragAndDropParameters.draggableEl;		
-	},
-	enumerable: false
-});
-
-Object.defineProperty(dragAndDropParameters, "elDroppable", {
-	get() {
-		console.error("DEPRECATED: use dragAndDropParameters.droppableEl instead of .elDroppable");
-		return dragAndDropParameters.droppableEl;		
-	},
-	enumerable: false
-});
-
-
 const defaultDragging = function defaultDragging(_event) {
 	const dnd = dragAndDropParameters;
 	dnd.curX = _event.pageX;
@@ -290,11 +273,6 @@ class DragAndDrop {
 		this._setupClone(el, dragAndDropParameters, "copy");
 
 		this._setTempStyle();
-			
-		if(data.options !== undefined && data.options.dragging !== undefined) {
-			config.drag = data.options.dragging;
-			console.error("DEPRECATED: do not use 'data.options.dragging' but 'config.drag'");
-		}
 
 		if(typeof config.drag === "function") {
 			dragging = config.drag;
