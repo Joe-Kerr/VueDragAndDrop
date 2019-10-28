@@ -79,11 +79,11 @@ class DragAndDrop {
 	_getRect(el) {
 		let originalRect = el.getBoundingClientRect();
 		const elPos = window.getComputedStyle(el).position;
+
+		const x = (elPos !== "fixed") ? originalRect.x+window.pageXOffset : originalRect.x;
+		const y = (elPos !== "fixed") ? originalRect.y+window.pageYOffset : originalRect.y;			
 		
-		const x = (elPos === "fixed") ? originalRect.x+window.pageXOffset : originalRect.x;
-		const y = (elPos === "fixed") ? originalRect.y+window.pageYOffset : originalRect.y;
-		
-		return {x, y, width: originalRect.width, height: originalRect.height};
+		return {x, y, width: originalRect.width, height: originalRect.height, position: elPos};
 	}
 	
 	/// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
@@ -126,9 +126,6 @@ class DragAndDrop {
 		clone.style.width = originalRect.width+"px";
 		clone.style.height = originalRect.height+"px";
 		clone.style.pointerEvents = "none";
-		
-		//!!
-		clone.style.position = "absolute";
 		
 		event._cloneStartX = x;
 		event._cloneStartY = y;
@@ -264,7 +261,7 @@ class DragAndDrop {
 	_writeDraggableParameters(params, el, event, config, data) {
 		const dom = (el !== document) ? el : el.body;
 		const xy = this._getRect(dom);
-		
+	
 		params.startX = event.pageX;
 		params.startY = event.pageY;
 		params.curX = event.pageX;
@@ -276,7 +273,7 @@ class DragAndDrop {
 		params.draggableX = xy.x;
 		params.draggableY = xy.y;
 		params.draggableNewX = params.draggableX;
-		params.draggableNewY = params.draggableY;				
+		params.draggableNewY = params.draggableY;		
 	}
 	
 	_mouseup(el, event, config, data) {

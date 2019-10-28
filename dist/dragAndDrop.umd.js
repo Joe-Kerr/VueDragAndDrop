@@ -581,13 +581,14 @@ function () {
     value: function _getRect(el) {
       var originalRect = el.getBoundingClientRect();
       var elPos = window.getComputedStyle(el).position;
-      var x = elPos === "fixed" ? originalRect.x + window.pageXOffset : originalRect.x;
-      var y = elPos === "fixed" ? originalRect.y + window.pageYOffset : originalRect.y;
+      var x = elPos !== "fixed" ? originalRect.x + window.pageXOffset : originalRect.x;
+      var y = elPos !== "fixed" ? originalRect.y + window.pageYOffset : originalRect.y;
       return {
         x: x,
         y: y,
         width: originalRect.width,
-        height: originalRect.height
+        height: originalRect.height,
+        position: elPos
       };
     } /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
     ///  Solutions are not really great. For now, leave it as heuristic carbon copy.
@@ -634,9 +635,7 @@ function () {
       clone.style.top = y + "px";
       clone.style.width = originalRect.width + "px";
       clone.style.height = originalRect.height + "px";
-      clone.style.pointerEvents = "none"; //!!
-
-      clone.style.position = "absolute";
+      clone.style.pointerEvents = "none";
       event._cloneStartX = x;
       event._cloneStartY = y;
       document.body.appendChild(clone);
