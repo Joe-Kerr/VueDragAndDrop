@@ -803,7 +803,10 @@ function () {
       this._setTempStyle();
 
       if (typeof config.drag === "function") {
-        dragging = config.drag;
+        dragging = function draggingWithCallback(event) {
+          defaultDragging(event);
+          config.drag("mousedown", dragAndDropParameters);
+        };
       } else {
         dragging = defaultDragging;
       }

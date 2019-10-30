@@ -12,16 +12,16 @@
     √ directive throws if an undefined event is received in the store callback
 
   dragAndDrop.js - Integration testing
-    √ clone setup and cleanup (269ms)
-    √ all adhoc event listeners cleaned up (188ms)
+    √ clone setup and cleanup (265ms)
+    √ all adhoc event listeners cleaned up (187ms)
     √ all delegate event listeners cleaned up
     √ all droppable mouseup callbacks fire before evaluation function
-    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (348ms)
-    √ draggable callback receives all draggable parameters (349ms)
-    √ droppable callback receives all parameters (348ms)
-    √ optional custom dragstart callback fires (333ms)
-    √ optional custom dragstop callback fires when not over droppable (327ms)
-    √ optional custom dragstop callback fires when over droppable (335ms)
+    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (345ms)
+    √ draggable callback receives all draggable parameters (333ms)
+    √ droppable callback receives all parameters (352ms)
+    √ optional custom dragstart callback fires (335ms)
+    √ optional custom dragstop callback fires when not over droppable (333ms)
+    √ optional custom dragstop callback fires when over droppable (340ms)
     √ optional custom drag callback fires (483ms)
 
   dragAndDrop.js
