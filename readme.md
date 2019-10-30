@@ -220,6 +220,11 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.0.2
+- Fix: Drag callback replaced mousemove instead of being called by mousemove
+- Fix: Demo now displays draggable clone correctly
+- Fix: Draggable clone falls back to absolute position
+
 ### 1.0.1
 - Fix: Draggable (clone) now moved properly when viewport not a zero-zero
 - Fix: Use width and height instead of w and h of draggable rect
