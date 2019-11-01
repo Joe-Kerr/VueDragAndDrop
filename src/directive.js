@@ -1,3 +1,5 @@
+import PubSub from "./PubSub.js";
+
 let notifyStore;
 
 function getMode(arg) {	
@@ -29,13 +31,27 @@ function getConfig(context, mode, vnode) {
 		type: params.type,
 		greedy: (context.modifiers.greedy === true),
 		draggableOnly: (context.modifiers.only === true),
-		drag: params.drag,
-		dragstop: params.dragstop,
-		dragstart: params.dragstart,
 		multiDrag: (params.multi !== undefined) ? ()=>vnode.context[params.multi] : null
 	};
 
 	return config;
+}
+
+function getCallbacks(params, config) {
+	const callbacks = new PubSub();
+	const events = PubSub.events;
+	
+	if(!config.draggableOnly) {
+		callbacks.subscribe(events.dragstart, storeCallback);
+		callbacks.subscribe(events.dragstopOnDroppable, storeCallback);
+		callbacks.subscribe(events.dragstopAlways, storeCallback);
+	}
+	
+	if(typeof params.drag === "function") {callbacks.subscribe(events.dragmove, params.drag);}
+	if(typeof params.dragstop === "function") {callbacks.subscribe(events.dragstopAfterAllDroppables, params.dragstop);}
+	if(typeof params.dragstart === "function") {callbacks.subscribe(events.dragstart, params.dragstart);}
+	
+	return callbacks;
 }
 
 function getData(value={}) {
@@ -43,7 +59,7 @@ function getData(value={}) {
 }
 
 function storeCallback(event, data) {
-	const map = {mousedown: "draggable", mouseup: "droppable", mouseupAlways: "done"};
+	const map = {dragstart: "draggable", dragstopOnDroppable: "droppable", dragstopAlways: "done"};
 	const command = map[event];
 	
 	if(command === undefined) {
@@ -69,9 +85,10 @@ function dragAndDrop(store, DragAndDrop, options={}) {
 			const mode = getMode(context.arg);	
 			const data = getData(context.value);	
 			const elMoving = getEl(elHandle, context.value);
-			const config = getConfig(context, mode, vnode);
-
-			dragAndDrop.addEventListener(elHandle, elMoving, config, data, storeCallback);			
+			const config = getConfig(context, mode);			
+			const callbacks = getCallbacks(context.value, config);
+						
+			dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);			
 		},
 		unbind(el, context, vnode) {
 			dragAndDrop.removeEventListener(context.arg, el);

@@ -257,7 +257,7 @@ class DragAndDrop {
 	}
 	
 	//document.body.contains(dndParams.draggableEl) //should I check for "illegal" removes? As Vue plugin probably not; as D&D class probably yes  #todo
-	_evaluateDroppableWatcher(event, config, dndParams, callback) {
+	_evaluateDroppableWatcher(event, config, dndParams, callbacks) {
 		if(this.draggableGotRemoved === false) {
 			const selfIdx = this._evaluateDropOnSelf(dndParams.draggableEl, this.droppables);
 			
@@ -271,23 +271,20 @@ class DragAndDrop {
 			
 				config.droppableType = droppable.type;
 				this._writeDroppableParameters(dndParams, droppable.el, event, config, droppable.data);
-				callback("mouseup", dndParams);
+				callbacks.notify(callbacks.getEvent("dragstopOnDroppable"), dndParams);
 				
 				if(droppable.greedy) {
 					break;
 				}
 			}
-		
-			if(typeof config.dragstop === "function") {			
-				this._writeDroppableParameters(dndParams, event.target, event, config, null);
-				config.dragstop("mouseup", dndParams);			
-			}
+			
+			callbacks.notify(callbacks.getEvent("dragstopAfterAllDroppables"), dndParams);
 		}
-		
+	
 		this.droppables.splice(0, this.droppables.length);
 		this.processingDroppables = false;
-		
-		callback("mouseupAlways", dndParams);
+
+		callbacks.notify(callbacks.getEvent("dragstopAlways"), dndParams);
 		
 		this._reset();
 	}
@@ -341,43 +338,33 @@ class DragAndDrop {
 		this.droppables.push({el, data, type: config.droppableType, greedy: config.greedy});
 	}
 	
-	_mousedown(el, event, config, data, callback) {		
+	_mousedown(el, event, config, data, callbacks) {		
 		this.isDragging = true;
 				
 		this._writeDraggableParameters(dragAndDropParameters, el, event, config, data);
 
-		this._initDroppableWatcher(config, dragAndDropParameters, callback);
-		
-		this._setupClone(el, dragAndDropParameters, config, "copy");
+		this._initDroppableWatcher(config, dragAndDropParameters, callbacks);
+
+		this._setupClone(el, dragAndDropParameters, "copy");
 
 		this._setTempStyle();
 
-		if(typeof config.drag === "function") {
-			dragging = function draggingWithCallback(event) {defaultDragging(event); config.drag("mousedown", dragAndDropParameters); };
-		}
-		else {
-			dragging = defaultDragging;
-		}
+		dragging = function draggingWithCallback(event) {defaultDragging(event); callbacks.notify(callbacks.getEvent("dragmove"), dragAndDropParameters);}
 		
 		document.addEventListener("mousemove", dragging);	
-					
-		callback("mousedown", dragAndDropParameters);	
 		
-		if(typeof config.dragstart === "function") {
-			config.dragstart("mousedown", dragAndDropParameters);			
-		}		
+		callbacks.notify(callbacks.getEvent("dragstart"), dragAndDropParameters);
 	}
 
-	addEventListener(elSource, elMoving, config, data, _callback) {
+	addEventListener(elSource, elMoving, config, data, callbacks) {
 		this._parseConfig(config);
 		
 		const mode = config.mode;
 		const id = this.listeners.length;
 		
-		if(mode === "draggable") {
-			const callback = (config.draggableOnly === false) ? _callback : ()=>{};								
+		if(mode === "draggable") {								
 			this.listeners[id] = {
-				cb: (event)=>{ this._mousedown(elMoving, event, config, data, callback); },
+				cb: (event)=>{ this._mousedown(elMoving, event, config, data, callbacks); },
 				el: elSource
 			};
 			elSource.addEventListener("mousedown", this.listeners[id].cb);	
