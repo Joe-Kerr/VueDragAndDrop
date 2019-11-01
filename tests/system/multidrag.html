@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="pragma" content="no-cache">			
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'  https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js" />
+		
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js"></script>
+		
+		<style>			
+			body {
+				width: 2048px;
+				height: 2048px;
+			}
+			
+			#controls {
+				margin-top: 300px;
+			}
+			
+			.draggable {				
+				width: 120px;
+				height: 40px;
+				
+				border: 1px solid blue;
+				z-index: 2;
+				background-color: white;
+			}
+			
+			.absolute {
+				position: absolute;
+			}
+			
+			.fixed {
+				position: fixed;
+			}			
+		</style>
+
+		<title>ready</title>
+	</head>
+
+<body>
+
+<div id="v"></div>
+
+<script src="../../dist/dragAndDrop.umd.js"></script>
+
+<script>
+(function(){
+	const installer = dragAndDrop.installer;
+
+	const store = new Vuex.Store();	
+	Vue.use(installer, {vuex: store})  
+
+	const v = new Vue({
+		el: "#v",
+		store,
+		template: `
+			<div>
+				<section id="draggableContainer">
+					<div id="a1" class="draggable absolute" style="left: 0px; top: 50px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dAbs1</div>
+					<div id="a2" class="draggable absolute" style="left: 130px; top: 50px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dAbs2</div>
+					<div id="a3" class="draggable absolute" style="left: 260px; top: 50px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dAbs3</div>
+					
+					<div id="f1" class="draggable fixed" style="left: 0px; top: 100px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dFix1</div>
+					<div id="f2" class="draggable fixed" style="left: 130px; top: 100px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dFix2</div>
+					<div id="f3" class="draggable fixed" style="left: 260px; top: 100px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dFix3</div>
+				</section>
+				
+				<section id="controls">
+				<button id="reset" @click="reset">reset</button><br>
+				<button id="select" @click="select">select</button> <input id="selection" type="text" v-model="selectionText" />			
+				</section>
+			</div>
+		`,
+		
+		data() {
+			return {
+				selection: [],
+				selectionText: "a2,a3,f2,f3"
+			}
+		},
+		
+		methods: {
+			dragstop(event, data) {
+				const dx = data.endX - data.startX;
+				const dy = data.endY - data.startY;
+				
+				this.selection.forEach((el)=>{
+					const x = parseInt(el.style.left.replace("px", ""));
+					const y = parseInt(el.style.top.replace("px", ""));			
+					el.style.left = (x+dx)+"px";
+					el.style.top = (y+dy)+"px";
+				});
+			},
+			
+			select() {
+				this.selection.splice(0, this.selection.length);
+				
+				const s = this.selectionText.split(",");				
+				this.selection.push(...s.map( (id)=>(document.getElementById(id)) ));
+				
+				//console.log(this.selection)
+			},
+			
+			reset() {
+				document.title = "reloading";
+				window.location.reload(false);
+			}
+		}
+
+	});
+
+	window.v = v;
+})();
+</script>
+
+</body>
+</html>

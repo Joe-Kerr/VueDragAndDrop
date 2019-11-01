@@ -434,7 +434,7 @@ function getEl(el) {
   return newEl;
 }
 
-function getConfig(context, mode) {
+function getConfig(context, mode, vnode) {
   var params = context.value || {};
   var config = {
     mode: mode,
@@ -443,7 +443,10 @@ function getConfig(context, mode) {
     draggableOnly: context.modifiers.only === true,
     drag: params.drag,
     dragstop: params.dragstop,
-    dragstart: params.dragstart
+    dragstart: params.dragstart,
+    multiDrag: params.multi !== undefined ? function () {
+      return vnode.context[params.multi];
+    } : null
   };
   return config;
 }
@@ -486,7 +489,7 @@ function dragAndDrop(store, DragAndDrop) {
       var mode = getMode(context.arg);
       var data = getData(context.value);
       var elMoving = getEl(elHandle, context.value);
-      var config = getConfig(context, mode);
+      var config = getConfig(context, mode, vnode);
       dragAndDrop.addEventListener(elHandle, elMoving, config, data, storeCallback);
     },
     unbind: function unbind(el, context, vnode) {
@@ -581,7 +584,7 @@ function () {
 
   }, {
     key: "_createCopyClone",
-    value: function _createCopyClone(el, event, rect) {
+    value: function _createCopyClone(el) {
       var clone = el.cloneNode(true);
       var style = document.defaultView.getComputedStyle(el, null);
       clone.style.color = style.color;
@@ -594,7 +597,7 @@ function () {
     }
   }, {
     key: "_createCheapClone",
-    value: function _createCheapClone(el, event, rect) {
+    value: function _createCheapClone(el) {
       var clone = el.cloneNode(false); //low performance grey box
 
       clone.style.border = "1px solid yellow";
@@ -603,33 +606,132 @@ function () {
       return clone;
     }
   }, {
-    key: "_setupClone",
-    value: function _setupClone(el, event) {
-      var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+    key: "_createABunchOfClones",
+    value: function _createABunchOfClones(els, event, type) {
+      var _this2 = this;
 
-      if (type === null) {
-        return;
+      var clone = document.createElement("div");
+
+      var initRect = this._getRect(els[0]);
+
+      var top = initRect.y;
+      var left = initRect.x;
+      var bottom = top + initRect.height;
+      var right = left + initRect.width;
+      els.forEach(function (el) {
+        var rect = _this2._getRect(el);
+
+        var pos = rect.position;
+        var clonedEl = type === "copy" ? _this2._createCopyClone(el) : _this2._createCheapClone(el);
+        clonedEl.id = "cloned_" + clonedEl.id;
+        clonedEl.$_x = rect.x;
+        clonedEl.$_y = rect.y;
+        clonedEl.style.position = "absolute";
+
+        if (pos === "fixed") {
+          clonedEl.$_x = rect.x + window.pageXOffset;
+          clonedEl.$_y = rect.y + window.pageYOffset;
+        }
+
+        clone.appendChild(clonedEl);
+
+        if (rect.x < left) {
+          left = rect.x;
+        }
+
+        if (rect.y < top) {
+          top = rect.y;
+        }
+
+        if (rect.x + rect.width > right) {
+          right = rect.x + rect.width;
+        }
+
+        ;
+
+        if (rect.y + rect.height > bottom) {
+          bottom = rect.y + rect.height;
+        }
+
+        ;
+      });
+      return {
+        clone: clone,
+        top: top,
+        left: left,
+        bottom: bottom,
+        right: right
+      };
+    }
+  }, {
+    key: "_setupMultiClone",
+    value: function _setupMultiClone(els, event, type) {
+      var cloneObj = this._createABunchOfClones(els, event, type);
+
+      var x = cloneObj.left;
+      var y = cloneObj.top;
+      var h = cloneObj.bottom - cloneObj.top;
+      var w = cloneObj.right - cloneObj.left;
+      var clone = cloneObj.clone;
+      clone.style.position = "absolute";
+      var children = clone.children;
+
+      for (var i = 0, ii = children.length; i < ii; i++) {
+        var c = children[i];
+        c.style.left = c.$_x - x + "px";
+        c.style.top = c.$_y - y + "px";
       }
 
+      return {
+        clone: clone,
+        rect: {
+          x: x,
+          y: y,
+          width: w,
+          height: h
+        }
+      };
+    }
+  }, {
+    key: "_setupSingleClone",
+    value: function _setupSingleClone(el, event, type) {
       var originalRect = this._getRect(el);
 
       var x = originalRect.x;
       var y = originalRect.y;
       var pos = originalRect.position;
-      clone = type === "copy" ? this._createCopyClone(el, event, originalRect) : this._createCheapClone(el, event, originalRect);
-      clone.id = "cloned_" + clone.id;
-      clone.style.left = x + "px";
-      clone.style.top = y + "px";
-      clone.style.width = originalRect.width + "px";
-      clone.style.height = originalRect.height + "px";
-      clone.style.pointerEvents = "none";
+      var clone = type === "copy" ? this._createCopyClone(el) : this._createCheapClone(el);
 
       if (pos !== "fixed" && pos !== "absolute") {
         clone.style.position = "absolute";
       }
 
-      event._cloneStartX = x;
-      event._cloneStartY = y;
+      return {
+        clone: clone,
+        rect: originalRect
+      };
+    }
+  }, {
+    key: "_setupClone",
+    value: function _setupClone(el, event, config) {
+      var type = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+
+      if (type === null) {
+        return;
+      }
+
+      var list = this._getDraggableList(el, config);
+
+      var cloneObj = list.length === 1 ? this._setupSingleClone(list[0], event, type) : this._setupMultiClone(list, event, type);
+      clone = cloneObj.clone;
+      clone.id = "cloneAnchor";
+      clone.style.left = cloneObj.rect.x + "px";
+      clone.style.top = cloneObj.rect.y + "px"; //clone.style.width = cloneObj.rect.width+"px";
+      //clone.style.height = cloneObj.rect.height+"px";
+
+      clone.style.pointerEvents = "none";
+      event._cloneStartX = cloneObj.rect.x;
+      event._cloneStartY = cloneObj.rect.y;
       document.body.appendChild(clone);
     }
   }, {
@@ -697,6 +799,19 @@ function () {
       var isDraggable = config.mode === "draggable";
       config.draggableType = isDraggable ? config.type : null;
       config.droppableType = !isDraggable ? config.type : null;
+    }
+  }, {
+    key: "_getDraggableList",
+    value: function _getDraggableList(draggableTarget, config) {
+      if (config.draggableType !== null && typeof config.multiDrag === "function") {
+        var multi = config.multiDrag();
+
+        if (multi.length > 0) {
+          return multi;
+        }
+      }
+
+      return [draggableTarget];
     } //document.body.contains(dndParams.draggableEl) //should I check for "illegal" removes? As Vue plugin probably not; as D&D class probably yes  #todo
 
   }, {
@@ -807,7 +922,7 @@ function () {
 
       this._initDroppableWatcher(config, dragAndDropParameters, callback);
 
-      this._setupClone(el, dragAndDropParameters, "copy");
+      this._setupClone(el, dragAndDropParameters, config, "copy");
 
       this._setTempStyle();
 
@@ -830,7 +945,7 @@ function () {
   }, {
     key: "addEventListener",
     value: function addEventListener(elSource, elMoving, config, data, _callback) {
-      var _this2 = this;
+      var _this3 = this;
 
       this._parseConfig(config);
 
@@ -841,7 +956,7 @@ function () {
         var callback = config.draggableOnly === false ? _callback : function () {};
         this.listeners[id] = {
           cb: function cb(event) {
-            _this2._mousedown(elMoving, event, config, data, callback);
+            _this3._mousedown(elMoving, event, config, data, callback);
           },
           el: elSource
         };
@@ -849,7 +964,7 @@ function () {
       } else if (mode === "droppable") {
         this.listeners[id] = {
           cb: function cb(event) {
-            _this2._mouseup(elMoving, event, config, data);
+            _this3._mouseup(elMoving, event, config, data);
           },
           el: elSource
         };

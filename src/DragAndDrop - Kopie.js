@@ -174,9 +174,16 @@ class DragAndDrop {
 		clone.id = "cloneAnchor";
 		clone.style.left = cloneObj.rect.x+"px";
 		clone.style.top = cloneObj.rect.y+"px";		
-		//clone.style.width = cloneObj.rect.width+"px";
-		//clone.style.height = cloneObj.rect.height+"px";
+		clone.style.width = cloneObj.rect.width+"px";
+		clone.style.height = cloneObj.rect.height+"px";
 		clone.style.pointerEvents = "none";		
+
+		const zoom = config.zoom();
+		if(zoom !== 1) {
+			clone.style.transform = "scale("+zoom+")";
+			clone.style["transform-origin"] = (-cloneObj.rect.x)+"px "+(-cloneObj.rect.y)+"px";
+			//clone.style["transform-origin"] = "0 0";
+		}
 		
 		event._cloneStartX = cloneObj.rect.x;
 		event._cloneStartY = cloneObj.rect.y;		
@@ -206,6 +213,7 @@ class DragAndDrop {
 		document.removeEventListener("mousemove", dragging);
 		dragging = null;
 		this.styleBackup = null;
+
 	}	
 
 	_evaluateDropOnSelf(self, droppables) {

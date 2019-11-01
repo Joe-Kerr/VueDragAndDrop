@@ -4,12 +4,7 @@ const testSuite = require("../../../../../../+test_common/webdriverSuite.js");
 //to=test objects
 let driver, to={};
 
-//after all
-after(async ()=>{
-	await testSuite.quit();
-})
-
-suite.only("Drag and drop system test");
+suite("Drag and drop system test");
 
 async function dragAndDrop(from, to, x2=0, y2=0) {
 	return driver.actions({async: true})
@@ -127,7 +122,7 @@ test("clone of fixed draggable renders before mousemove when viewport not at ori
 		.pause(1)
 		.perform();	
 	
-	const clone = await driver.findElement(By.id("cloned_draggableFreeFixed"));
+	const clone = await driver.findElement(By.id("cloneAnchor"));
 	clonePos = await clone.getRect();
 
 	assert.equal(elPos.x, clonePos.x);
@@ -164,7 +159,7 @@ test("clone of aboslute draggable renders before mousemove when viewport not at 
 		.pause(1)
 		.perform();	
 	
-	const clone = await driver.findElement(By.id("cloned_draggableFree"));
+	const clone = await driver.findElement(By.id("cloneAnchor"));
 	clonePos = await clone.getRect();
 
 	assert.equal(elPos.x, clonePos.x);
@@ -188,9 +183,6 @@ test("clone has same dimension as element", async ()=>{
 	const {By} = testSuite;
 	const elDim = await to.draggableFree.getRect();
 	
-	let borderWidth = await to.draggableFree.getCssValue("borderWidth");
-	borderWidth = parseInt(borderWidth.replace("px", "")) * 2;
-	
 	const mx0 = elDim.x;
 	const my0 = elDim.y;		
 	const mxEnd = 400;
@@ -205,11 +197,11 @@ test("clone has same dimension as element", async ()=>{
 		.pause(1)
 		.perform();
 		
-	const clone = await driver.findElement(By.id("cloned_draggableFree"));	
+	const clone = await driver.findElement(By.id("cloneAnchor"));	
 	const cloneDim = await clone.getRect();
 	
-	assert.equal(cloneDim.width, elDim.width+borderWidth);
-	assert.equal(cloneDim.height, elDim.height+borderWidth);
+	assert.equal(cloneDim.width, elDim.width);
+	assert.equal(cloneDim.height, elDim.height);
 	
 	await driver.actions({async: true})	
 		.release()

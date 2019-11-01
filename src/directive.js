@@ -21,8 +21,9 @@ function getEl(el, value={}) {
 	return newEl;
 }
 
-function getConfig(context, mode) {
+function getConfig(context, mode, vnode) {
 	const params = context.value || {};
+
 	const config = {
 		mode,
 		type: params.type,
@@ -30,7 +31,8 @@ function getConfig(context, mode) {
 		draggableOnly: (context.modifiers.only === true),
 		drag: params.drag,
 		dragstop: params.dragstop,
-		dragstart: params.dragstart
+		dragstart: params.dragstart,
+		multiDrag: (params.multi !== undefined) ? ()=>vnode.context[params.multi] : null
 	};
 
 	return config;
@@ -54,7 +56,7 @@ function storeCallback(event, data) {
 function dragAndDrop(store, DragAndDrop, options={}) {
 	const dragAndDrop = new DragAndDrop();
 	const namespace = options.namespace;
-	
+
 	notifyStore = (action, data)=>{store.dispatch(namespace+"/"+action, data);}
 
 	//context.arg = v-dir:arg
@@ -67,7 +69,7 @@ function dragAndDrop(store, DragAndDrop, options={}) {
 			const mode = getMode(context.arg);	
 			const data = getData(context.value);	
 			const elMoving = getEl(elHandle, context.value);
-			const config = getConfig(context, mode);
+			const config = getConfig(context, mode, vnode);
 
 			dragAndDrop.addEventListener(elHandle, elMoving, config, data, storeCallback);			
 		},

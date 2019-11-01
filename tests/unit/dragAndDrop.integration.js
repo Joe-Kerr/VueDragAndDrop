@@ -89,11 +89,11 @@ test("clone setup and cleanup", async ()=>{
 	org.id = "test";
 	
 	sample._mousedown(org, defaultEvent(), config(), {}, ()=>{});	
-	assert.notEqual(global.document.getElementById("cloned_test"), null);
+	assert.notEqual(global.document.getElementById("cloneAnchor"), null);
 	
 	await trigger("mouseup");	
 
-	assert.equal(global.document.getElementById("clone_test"), null);
+	assert.equal(global.document.getElementById("cloneAnchor"), null);
 });
 
 test("all adhoc event listeners cleaned up", async ()=>{

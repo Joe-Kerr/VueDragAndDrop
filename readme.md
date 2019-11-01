@@ -141,6 +141,9 @@ Callback function that triggers after the mousedown event.
 
 Callback function that triggers after the mouseup event.
 
+### multi< array >
+
+
 
 ## Directive modifiers
 
