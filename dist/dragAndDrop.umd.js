@@ -407,7 +407,76 @@ const cats4Vue = {
 };
 
 /* harmony default export */ var src = (cats4Vue);
+// CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/PubSub.js
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var PubSub =
+/*#__PURE__*/
+function () {
+  function PubSub() {
+    _classCallCheck(this, PubSub);
+
+    var events = PubSub.events;
+
+    for (var event in events) {
+      this[events[event]] = [];
+    }
+  }
+
+  _createClass(PubSub, [{
+    key: "subscribe",
+    value: function subscribe(event, callback) {
+      var subs = this[event];
+
+      if (subs === undefined) {
+        throw new Error("Tried to subscribe to undefined event: " + event);
+      }
+
+      subs.push(callback);
+    }
+  }, {
+    key: "notify",
+    value: function notify(event, data) {
+      var subs = this[event];
+
+      if (subs === undefined) {
+        throw new Error("Tried to notify undefined event: " + event);
+      }
+
+      for (var i = 0, ii = subs.length; i < ii; i++) {
+        subs[i](event, data);
+      }
+    }
+  }, {
+    key: "getEvent",
+    value: function getEvent(name) {
+      var event = PubSub.events[name];
+
+      if (event === undefined) {
+        throw new Error("Event not found with key: " + name);
+      }
+
+      return event;
+    }
+  }]);
+
+  return PubSub;
+}();
+
+PubSub.events = {
+  "dragstart": "dragstart",
+  "dragmove": "dragmove",
+  "dragstopOnDroppable": "dragstopOnDroppable",
+  "dragstopAfterAllDroppables": "dragstopAfterAllDroppables",
+  "dragstopAlways": "dragstopAlways"
+};
+/* harmony default export */ var src_PubSub = (PubSub);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/directive.js
+
 var notifyStore;
 
 function getMode(arg) {
@@ -440,12 +509,34 @@ function getConfig(context, mode) {
     mode: mode,
     type: params.type,
     greedy: context.modifiers.greedy === true,
-    draggableOnly: context.modifiers.only === true,
-    drag: params.drag,
-    dragstop: params.dragstop,
-    dragstart: params.dragstart
+    draggableOnly: context.modifiers.only === true
   };
   return config;
+}
+
+function getCallbacks(params, config) {
+  var callbacks = new src_PubSub();
+  var events = src_PubSub.events;
+
+  if (!config.draggableOnly) {
+    callbacks.subscribe(events.dragstart, storeCallback);
+    callbacks.subscribe(events.dragstopOnDroppable, storeCallback);
+    callbacks.subscribe(events.dragstopAlways, storeCallback);
+  }
+
+  if (typeof params.drag === "function") {
+    callbacks.subscribe(events.dragmove, params.drag);
+  }
+
+  if (typeof params.dragstop === "function") {
+    callbacks.subscribe(events.dragstopAfterAllDroppables, params.dragstop);
+  }
+
+  if (typeof params.dragstart === "function") {
+    callbacks.subscribe(events.dragstart, params.dragstart);
+  }
+
+  return callbacks;
 }
 
 function getData() {
@@ -455,9 +546,9 @@ function getData() {
 
 function storeCallback(event, data) {
   var map = {
-    mousedown: "draggable",
-    mouseup: "droppable",
-    mouseupAlways: "done"
+    dragstart: "draggable",
+    dragstopOnDroppable: "droppable",
+    dragstopAlways: "done"
   };
   var command = map[event];
 
@@ -487,7 +578,8 @@ function dragAndDrop(store, DragAndDrop) {
       var data = getData(context.value);
       var elMoving = getEl(elHandle, context.value);
       var config = getConfig(context, mode);
-      dragAndDrop.addEventListener(elHandle, elMoving, config, data, storeCallback);
+      var callbacks = getCallbacks(context.value, config);
+      dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);
     },
     unbind: function unbind(el, context, vnode) {
       dragAndDrop.removeEventListener(context.arg, el);
@@ -497,11 +589,11 @@ function dragAndDrop(store, DragAndDrop) {
 
 /* harmony default export */ var directive = (dragAndDrop);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/DragAndDrop.js
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function DragAndDrop_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function DragAndDrop_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function DragAndDrop_createClass(Constructor, protoProps, staticProps) { if (protoProps) DragAndDrop_defineProperties(Constructor.prototype, protoProps); if (staticProps) DragAndDrop_defineProperties(Constructor, staticProps); return Constructor; }
 
 var clone = null;
 var dragging;
@@ -549,7 +641,7 @@ var DragAndDrop =
 /*#__PURE__*/
 function () {
   function DragAndDrop() {
-    _classCallCheck(this, DragAndDrop);
+    DragAndDrop_classCallCheck(this, DragAndDrop);
 
     /// draggables
     this.isDragging = false;
@@ -562,7 +654,7 @@ function () {
     this.listeners = [];
   }
 
-  _createClass(DragAndDrop, [{
+  DragAndDrop_createClass(DragAndDrop, [{
     key: "_getRect",
     value: function _getRect(el) {
       var originalRect = el.getBoundingClientRect();
@@ -701,7 +793,7 @@ function () {
 
   }, {
     key: "_evaluateDroppableWatcher",
-    value: function _evaluateDroppableWatcher(event, config, dndParams, callback) {
+    value: function _evaluateDroppableWatcher(event, config, dndParams, callbacks) {
       if (this.draggableGotRemoved === false) {
         var selfIdx = this._evaluateDropOnSelf(dndParams.draggableEl, this.droppables);
 
@@ -717,23 +809,19 @@ function () {
 
           this._writeDroppableParameters(dndParams, droppable.el, event, config, droppable.data);
 
-          callback("mouseup", dndParams);
+          callbacks.notify(callbacks.getEvent("dragstopOnDroppable"), dndParams);
 
           if (droppable.greedy) {
             break;
           }
         }
 
-        if (typeof config.dragstop === "function") {
-          this._writeDroppableParameters(dndParams, event.target, event, config, null);
-
-          config.dragstop("mouseup", dndParams);
-        }
+        callbacks.notify(callbacks.getEvent("dragstopAfterAllDroppables"), dndParams);
       }
 
       this.droppables.splice(0, this.droppables.length);
       this.processingDroppables = false;
-      callback("mouseupAlways", dndParams);
+      callbacks.notify(callbacks.getEvent("dragstopAlways"), dndParams);
 
       this._reset();
     }
@@ -800,36 +888,28 @@ function () {
     }
   }, {
     key: "_mousedown",
-    value: function _mousedown(el, event, config, data, callback) {
+    value: function _mousedown(el, event, config, data, callbacks) {
       this.isDragging = true;
 
       this._writeDraggableParameters(dragAndDropParameters, el, event, config, data);
 
-      this._initDroppableWatcher(config, dragAndDropParameters, callback);
+      this._initDroppableWatcher(config, dragAndDropParameters, callbacks);
 
       this._setupClone(el, dragAndDropParameters, "copy");
 
       this._setTempStyle();
 
-      if (typeof config.drag === "function") {
-        dragging = function draggingWithCallback(event) {
-          defaultDragging(event);
-          config.drag("mousedown", dragAndDropParameters);
-        };
-      } else {
-        dragging = defaultDragging;
-      }
+      dragging = function draggingWithCallback(event) {
+        defaultDragging(event);
+        callbacks.notify(callbacks.getEvent("dragmove"), dragAndDropParameters);
+      };
 
       document.addEventListener("mousemove", dragging);
-      callback("mousedown", dragAndDropParameters);
-
-      if (typeof config.dragstart === "function") {
-        config.dragstart("mousedown", dragAndDropParameters);
-      }
+      callbacks.notify(callbacks.getEvent("dragstart"), dragAndDropParameters);
     }
   }, {
     key: "addEventListener",
-    value: function addEventListener(elSource, elMoving, config, data, _callback) {
+    value: function addEventListener(elSource, elMoving, config, data, callbacks) {
       var _this2 = this;
 
       this._parseConfig(config);
@@ -838,10 +918,9 @@ function () {
       var id = this.listeners.length;
 
       if (mode === "draggable") {
-        var callback = config.draggableOnly === false ? _callback : function () {};
         this.listeners[id] = {
           cb: function cb(event) {
-            _this2._mousedown(elMoving, event, config, data, callback);
+            _this2._mousedown(elMoving, event, config, data, callbacks);
           },
           el: elSource
         };

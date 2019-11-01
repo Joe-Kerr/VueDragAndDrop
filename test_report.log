@@ -13,16 +13,16 @@
 
   dragAndDrop.js - Integration testing
     √ clone setup and cleanup (265ms)
-    √ all adhoc event listeners cleaned up (187ms)
+    √ all adhoc event listeners cleaned up (199ms)
     √ all delegate event listeners cleaned up
     √ all droppable mouseup callbacks fire before evaluation function
-    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (345ms)
-    √ draggable callback receives all draggable parameters (333ms)
-    √ droppable callback receives all parameters (352ms)
-    √ optional custom dragstart callback fires (335ms)
-    √ optional custom dragstop callback fires when not over droppable (333ms)
-    √ optional custom dragstop callback fires when over droppable (340ms)
-    √ optional custom drag callback fires (483ms)
+    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (352ms)
+    √ draggable callback receives all draggable parameters (343ms)
+    √ droppable callback receives all parameters (349ms)
+    √ optional custom dragstart callback fires (337ms)
+    √ optional custom drag callback fires (480ms)
+    √ optional custom dragstop callbacks fire when not over droppable (333ms)
+    √ optional custom dragstop callback fires when over droppable (334ms)
 
   dragAndDrop.js
     √ addEventListener calls config parser with config parameter
@@ -42,6 +42,15 @@
     √ installer registers store with correct namespace
     √ installer registers directive with correct name
 
+  PubSub.js
+    √ PubSub instantiated with properties from static events
+    √ PubSub.subscribe adds callback to event array
+    √ PubSub.subscribe throws for undefined event
+    √ PubSub.notify calls callbacks of events with name and data parameter
+    √ PubSub.notify throws for undefined event
+    √ PubSub.getEvent returns event name by key
+    √ PubSub.getEvent throws for undefined event
+
   store.js
     √ getters.dragging returns true or false
     √ getters.draggableId returns id of draggable if dragging, or null if not
@@ -56,6 +65,6 @@
     √ actions.register throws for missing parameters
 
 
-  43 passing (3s)
+  50 passing (3s)
 
  MOCHA  Tests completed successfully

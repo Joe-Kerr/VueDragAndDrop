@@ -3,6 +3,7 @@
 const assert = require("assert");
 const sinon = require("sinon");
 const Sample = require("../../src/DragAndDrop.js").default;
+const PubSub = require("../../src/PubSub.js").default;
 
 let sample;
 const listeners = [];
@@ -41,7 +42,7 @@ async function trigger(name, target=global.document) {
 function addElWithListener(dnd, type, options={}) {
 	dnd._verifyMode(type);
 	const id = options.id || type;
-	const callback = options.callback || function(){};	
+	const cbs = options.callbacks || callbacks();	
 	const el = defaultElement(id);
 	
 	document.body.appendChild(el);
@@ -51,11 +52,14 @@ function addElWithListener(dnd, type, options={}) {
 	
 	cfg.mode = type;
 	cfg.type = options.type || (type === "draggable") ? "drag" : "drop";
-	sample.addEventListener(el, el, cfg, {}, callback);		
+	sample.addEventListener(el, el, cfg, {}, cbs);		
 	
 	return el;
 }
 
+function callbacks() {
+	return new PubSub();
+}
 
 suite("dragAndDrop.js - Integration testing");
 
@@ -88,7 +92,7 @@ test("clone setup and cleanup", async ()=>{
 	const org = defaultElement();
 	org.id = "test";
 	
-	sample._mousedown(org, defaultEvent(), config(), {}, ()=>{});	
+	sample._mousedown(org, defaultEvent(), config(), {}, callbacks());	
 	assert.notEqual(global.document.getElementById("cloned_test"), null);
 	
 	await trigger("mouseup");	
@@ -97,7 +101,7 @@ test("clone setup and cleanup", async ()=>{
 });
 
 test("all adhoc event listeners cleaned up", async ()=>{
-	sample._mousedown(defaultElement(), defaultEvent(), config(), {}, ()=>{});
+	sample._mousedown(defaultElement(), defaultEvent(), config(), {}, callbacks());
 
 	await trigger("mouseup");
 	
@@ -116,9 +120,9 @@ test("all delegate event listeners cleaned up", ()=>{
 	});
 		
 	c.mode = "draggable";	
-	sample.addEventListener(drag, drag, c, {}, ()=>{});
+	sample.addEventListener(drag, drag, c, {}, callbacks());
 	c.mode = "droppable";	
-	sample.addEventListener(drop, drop, c, {}, ()=>{});	
+	sample.addEventListener(drop, drop, c, {}, callbacks());	
 	sample.removeEventListener("draggable", drag);	
 	sample.removeEventListener("droppable", drop);
 	
@@ -141,7 +145,7 @@ test("all droppable mouseup callbacks fire before evaluation function", async ()
 	global.document.addEventListener("mouseup", droppable1);
 	global.document.addEventListener("mouseup", droppable2);
 	
-	sample._mousedown(defaultElement(), defaultEvent(), config(), {}, ()=>{});
+	sample._mousedown(defaultElement(), defaultEvent(), config(), {}, callbacks());
 	
 	trigger("mouseup");	
 	
@@ -155,9 +159,18 @@ test("all droppable mouseup callbacks fire before evaluation function", async ()
 test("call to removeEventListener mid dragging prevents droppable mouseup callbacks", async ()=>{
 	const called = [];
 	const callbackTest = (e,d)=>{called.push(e);}
+	const cbs = callbacks();
 	
-	const draggable1 = addElWithListener(sample, "draggable", {callback: callbackTest});
-	const droppable1 = addElWithListener(sample, "droppable", {callback: callbackTest});	
+	const dragstart = cbs.getEvent("dragstart");
+	const dragstop = cbs.getEvent("dragstopOnDroppable");
+	const dragstopAlways = cbs.getEvent("dragstopAlways");
+	
+	cbs.subscribe(dragstart, callbackTest);
+	cbs.subscribe(dragstop, callbackTest);
+	cbs.subscribe(dragstopAlways, callbackTest);
+	
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs});	
 		
 	await trigger("mousedown", draggable1);	
 	
@@ -165,7 +178,7 @@ test("call to removeEventListener mid dragging prevents droppable mouseup callba
 
 	await trigger("mouseup", droppable1);		
 	
-	assert.deepEqual(called.sort(), ["mousedown", "mouseupAlways"]);
+	assert.deepEqual(called.sort(), [dragstart, dragstopAlways]);
 	
 	sample.removeEventListener("droppable", droppable1);
 	document.body.removeChild(draggable1);
@@ -177,6 +190,10 @@ test("draggable callback receives all draggable parameters", async ()=>{
 	let params = {};
 	const callbackTest = (e,p)=>{params=p;}
 
+	const cbs = callbacks();
+	const dragstart = cbs.getEvent("dragstart");
+	cbs.subscribe(dragstart, callbackTest);
+	
 	//jsdom is not aware of layout
 	const paramsNotNull = [
 		"startX", "startY", "curX", "curY", 
@@ -184,8 +201,8 @@ test("draggable callback receives all draggable parameters", async ()=>{
 		"_cloneStartX", "_cloneStartY"
 	];
 	
-	const draggable1 = addElWithListener(sample, "draggable", {callback: callbackTest});
-	const droppable1 = addElWithListener(sample, "droppable", {callback: callbackTest});
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs});
 
 	await trigger("mousedown", draggable1);	
 
@@ -222,6 +239,10 @@ test("droppable callback receives all parameters", async ()=>{
 			params[param] = val;
 		}
 	}
+	
+	const cbs = callbacks();
+	const dragstop = cbs.getEvent("dragstopAlways");
+	cbs.subscribe(dragstop, callbackTest);	
 
 	//jsdom is not aware of layout
 	const paramsNotNull = [
@@ -250,8 +271,8 @@ test("droppable callback receives all parameters", async ()=>{
 		"_cloneStartY"		
 	];
 
-	const draggable1 = addElWithListener(sample, "draggable", {callback: callbackTest});
-	const droppable1 = addElWithListener(sample, "droppable", {callback: callbackTest});	
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs});	
 	
 	await trigger("mousedown", draggable1);	
 	
@@ -279,8 +300,11 @@ test("droppable callback receives all parameters", async ()=>{
 });
 
 test("optional custom dragstart callback fires", async ()=>{
-	const dragstart = new sinon.fake();
-	const draggable1 = addElWithListener(sample, "draggable", {dragstart});
+	const dragstart = new sinon.fake();	
+	const cbs = callbacks();
+	cbs.subscribe(cbs.getEvent("dragstart"), dragstart);	
+	
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
 	
 	await trigger("mousedown", draggable1);		
 	await trigger("mouseup");	
@@ -291,38 +315,11 @@ test("optional custom dragstart callback fires", async ()=>{
 	document.body.removeChild(draggable1);
 });
 
-test("optional custom dragstop callback fires when not over droppable", async ()=>{
-	const dragstop = new sinon.fake();
-	const draggable1 = addElWithListener(sample, "draggable", {dragstop});
-	
-	await trigger("mousedown", draggable1);		
-	await trigger("mouseup");	
-
-	assert.equal(dragstop.callCount, 1);
-	
-	sample.removeEventListener("draggable", draggable1);
-	document.body.removeChild(draggable1);
-});
-
-test("optional custom dragstop callback fires when over droppable", async ()=>{
-	const dragstop = new sinon.fake();
-	const draggable1 = addElWithListener(sample, "draggable", {dragstop});
-	const droppable1 = addElWithListener(sample, "droppable");	
-	
-	await trigger("mousedown", draggable1);		
-	await trigger("mouseup", droppable1);	
-
-	assert.equal(dragstop.callCount, 1);
-	
-	sample.removeEventListener("draggable", draggable1);
-	sample.removeEventListener("droppable", droppable1);
-	document.body.removeChild(draggable1);
-	document.body.removeChild(droppable1);	
-});
-
 test("optional custom drag callback fires", async ()=>{
 	const drag = new sinon.fake();
-	const draggable1 = addElWithListener(sample, "draggable", {drag});
+	const cbs = callbacks();
+	cbs.subscribe(cbs.getEvent("dragmove"), drag);		
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
 	
 	await trigger("mousedown", draggable1);		
 	await trigger("mousemove");	
@@ -332,4 +329,49 @@ test("optional custom drag callback fires", async ()=>{
 	
 	sample.removeEventListener("draggable", draggable1);
 	document.body.removeChild(draggable1);	
+});
+
+test("optional custom dragstop callbacks fire when not over droppable", async ()=>{
+	const dragstopOn = new sinon.fake();
+	const dragstopAfter = new sinon.fake();
+	const dragstopAlways = new sinon.fake();
+	const cbs = callbacks();
+	cbs.subscribe(cbs.getEvent("dragstopOnDroppable"), dragstopOn);		
+	cbs.subscribe(cbs.getEvent("dragstopAfterAllDroppables"), dragstopAfter);		
+	cbs.subscribe(cbs.getEvent("dragstopAlways"), dragstopAlways);		
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	
+	await trigger("mousedown", draggable1);		
+	await trigger("mouseup");	
+
+	assert.equal(dragstopOn.callCount, 0);
+	assert.equal(dragstopAfter.callCount, 1);
+	assert.equal(dragstopAlways.callCount, 1);
+	
+	sample.removeEventListener("draggable", draggable1);
+	document.body.removeChild(draggable1);
+});
+
+test("optional custom dragstop callback fires when over droppable", async ()=>{
+	const dragstopOn = new sinon.fake();
+	const dragstopAfter = new sinon.fake();
+	const dragstopAlways = new sinon.fake();
+	const cbs = callbacks();
+	cbs.subscribe(cbs.getEvent("dragstopOnDroppable"), dragstopOn);		
+	cbs.subscribe(cbs.getEvent("dragstopAfterAllDroppables"), dragstopAfter);		
+	cbs.subscribe(cbs.getEvent("dragstopAlways"), dragstopAlways);		
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	const droppable1 = addElWithListener(sample, "droppable");	
+	
+	await trigger("mousedown", draggable1);		
+	await trigger("mouseup", droppable1);	
+
+	assert.equal(dragstopOn.callCount, 1);
+	assert.equal(dragstopAfter.callCount, 1);
+	assert.equal(dragstopAlways.callCount, 1);
+	
+	sample.removeEventListener("draggable", draggable1);
+	sample.removeEventListener("droppable", droppable1);
+	document.body.removeChild(draggable1);
+	document.body.removeChild(droppable1);	
 });

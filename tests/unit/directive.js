@@ -1,6 +1,7 @@
 const assert = require("assert");
 const sinon = require("sinon");
 const sample = require("../../src/directive.js").default;
+const PubSub = require("../../src/PubSub.js").default;
 
 suite("directive.js");
 
@@ -16,7 +17,7 @@ test("directive installer returns object with properties inserted and unbind", (
 
 test("inserted calls dragAndDrop with correct parameters", ()=>{
 	const addEventListener = new sinon.fake();
-	function Dnd() {this.addEventListener = addEventListener; this.__internal__addListenerPerElement = addEventListener;}
+	function Dnd() {this.addEventListener = addEventListener;}
 	const directive = sample(null, Dnd);
 	
 	const el = {DOM: "element"}
@@ -31,10 +32,10 @@ test("inserted calls dragAndDrop with correct parameters", ()=>{
 	assert.equal(addEventListener.lastCall.args[0], el);
 	assert.equal(addEventListener.lastCall.args[1], el);
 	assert.equal(addEventListener.lastCall.args[3], context.value.data);
-	assert.equal(addEventListener.lastCall.args[4].name, "storeCallback");
+	assert.equal(addEventListener.lastCall.args[4].constructor.name, PubSub.name);
 	
 	const actualCfg = addEventListener.lastCall.args[2];
-	const expectedCfgKeys = ["mode", "type", "greedy", "draggableOnly", "dragstop", "dragstart", "drag"];
+	const expectedCfgKeys = ["mode", "type", "greedy", "draggableOnly"];
 	
 	expectedCfgKeys.forEach((key)=>{ assert.ok(key in actualCfg, "Missing key '"+key+"' in config parameter of addEventListener."); });
 	Object.keys(actualCfg).forEach((key)=>{ assert.ok( !(key in expectedCfgKeys), "Unexpected key '"+key+"' in config parameter of addEventListener."); });
@@ -43,7 +44,7 @@ test("inserted calls dragAndDrop with correct parameters", ()=>{
 
 test("unbind calls dragAndDrop with correct parameters", ()=>{
 	const removeEventListener = new sinon.fake();
-	function Dnd() {this.removeEventListener = removeEventListener; this.__internal__removeListenerPerElement = removeEventListener;}
+	function Dnd() {this.removeEventListener = removeEventListener}
 	const directive = sample(null, Dnd);
 	
 	const el = {DOM: "element"}
@@ -58,7 +59,7 @@ test("unbind calls dragAndDrop with correct parameters", ()=>{
 });
 
 test("directive throws if arg is not 'draggable' / 'droppable'", ()=>{
-	function Dnd() {this.addEventListener = addEventListener; this.__internal__addListenerPerElement = addEventListener;}
+	function Dnd() {this.addEventListener = addEventListener;}
 	const directive = sample(null, Dnd);	
 	const context = {
 		arg: "neitherDraggableNorDroppable",
@@ -75,7 +76,7 @@ test("directive throws if arg is not 'draggable' / 'droppable'", ()=>{
 });
 
 test("directive throws if the selector option does not return DOM element", ()=>{
-	function Dnd() {this.removeEventListener = removeEventListener; this.__internal__removeListenerPerElement = removeEventListener;}
+	function Dnd() {this.removeEventListener = removeEventListener;}
 	const directive = sample(null, Dnd);	
 	const context = {
 		arg: "draggable",
@@ -87,10 +88,11 @@ test("directive throws if the selector option does not return DOM element", ()=>
 });
 
 test("directive throws if an undefined event is received in the store callback", ()=>{
-	function Dnd() {this.addEventListener = addEventListener; this.__internal__addListenerPerElement = addEventListener;}
+	function Dnd() {this.addEventListener = addEventListener;}
 	const addEventListener = new sinon.fake();
 	const store = {dispatch: ()=>{}}
 	const directive = sample(store, Dnd);
+	const events = PubSub.events;
 	
 	const el = {DOM: "element"}
 	const context = {
@@ -100,9 +102,9 @@ test("directive throws if an undefined event is received in the store callback",
 	};		
 	
 	directive.inserted(el, context);
-	const callback = addEventListener.lastCall.args[4];
+	const callback = addEventListener.lastCall.args[4].dragstart[0];
 	
 	assert.throws(()=>{ callback("anythingButTheOnesBelow", null); }, {message: /undefined event/});
 	
-	["mousedown", "mouseup", "mouseupAlways"].forEach((legalEvent)=>{ assert.doesNotThrow(()=>{ callback(legalEvent, null); });  });
+	[events.dragstart, events.dragstopOnDroppable, events.dragstopAlways].forEach((legalEvent)=>{ assert.doesNotThrow(()=>{ callback(legalEvent, null); });  });
 });
