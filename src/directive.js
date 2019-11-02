@@ -1,4 +1,5 @@
 import PubSub from "./PubSub.js";
+import {createClone, updateClone, destroyClone} from "./cloneController.js";
 
 let notifyStore;
 
@@ -47,6 +48,10 @@ function getCallbacks(params, config) {
 		callbacks.subscribe(events.dragstopAlways, storeCallback);
 	}
 	
+	callbacks.subscribe(events.dragstart, createClone);
+	callbacks.subscribe(events.dragmove, updateClone);
+	callbacks.subscribe(events.dragstopAlways, destroyClone);	
+	
 	if(typeof params.drag === "function") {callbacks.subscribe(events.dragmove, params.drag);}
 	if(typeof params.dragstop === "function") {callbacks.subscribe(events.dragstopAfterAllDroppables, params.dragstop);}
 	if(typeof params.dragstart === "function") {callbacks.subscribe(events.dragstart, params.dragstart);}
@@ -85,9 +90,9 @@ function dragAndDrop(store, DragAndDrop, options={}) {
 			const mode = getMode(context.arg);	
 			const data = getData(context.value);	
 			const elMoving = getEl(elHandle, context.value);
-			const config = getConfig(context, mode);			
+			const config = getConfig(context, mode, vnode);			
 			const callbacks = getCallbacks(context.value, config);
-						
+		
 			dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);			
 		},
 		unbind(el, context, vnode) {

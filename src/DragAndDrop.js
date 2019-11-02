@@ -1,4 +1,3 @@
-let clone = null;
 let dragging;
 
 const dragAndDropParameters = {
@@ -16,15 +15,13 @@ const dragAndDropParameters = {
 	draggableNewY: null,
 	draggableType: null,
 	draggableData: null,
+	draggableList: null,
 	
 	droppableEl: null,
 	droppableX: null,
 	droppableY: null,	
 	droppableType: null,		
-	droppableData: null,
-	
-	_cloneStartX: null,
-	_cloneStartY: null
+	droppableData: null
 };
 
 const defaultDragging = function defaultDragging(_event) {
@@ -37,11 +34,6 @@ const defaultDragging = function defaultDragging(_event) {
 	
 	dnd.draggableNewX = dnd.draggableX + deltaX;
 	dnd.draggableNewY = dnd.draggableY + deltaY;
-	
-	if(clone === null) {return;}
-
-	clone.style.left = (dnd._cloneStartX+deltaX) +"px";
-	clone.style.top = (dnd._cloneStartY+deltaY) +"px";	
 }
 
 class DragAndDrop {	
@@ -69,121 +61,6 @@ class DragAndDrop {
 		return {x, y, width: originalRect.width, height: originalRect.height, position: elPos};
 	}
 	
-	/// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
-	///  Solutions are not really great. For now, leave it as heuristic carbon copy.
-	_createCopyClone(el) {
-		const clone = el.cloneNode(true);
-		const style = document.defaultView.getComputedStyle(el, null);
-		
-		clone.style.color = style.color;
-		clone.style.backgroundColor = style.backgroundColor;
-		clone.style.border = style.border;
-		clone.style.borderRadius = style.borderRadius;
-		
-		clone.style.margin = "0px";		
-		clone.style.opacity = 0.6;
-
-		return clone;	
-	}	
-	
-	_createCheapClone(el) {
-		const clone = el.cloneNode(false); //low performance grey box
-		
-		clone.style.border = "1px solid yellow";
-		clone.style.boxShadow = "box-shadow: 0px 0px 9px 5px rgba(231,166,26,1)";
-		clone.style.backgroundColor = "#eeeeee";
-		return clone;
-	}	
-	
-	_createABunchOfClones(els, event, type) {
-		const clone = document.createElement("div");
-		const initRect = this._getRect(els[0]);
-		
-		let top = initRect.y;
-		let left = initRect.x;
-		let bottom = top + initRect.height;
-		let right = left + initRect.width;
-		
-		els.forEach((el)=>{ 
-			const rect = this._getRect(el);
-			const pos = rect.position;			
-			const clonedEl = (type === "copy") ? this._createCopyClone(el) : this._createCheapClone(el);
-			
-			clonedEl.id = "cloned_"+clonedEl.id;
-			clonedEl.$_x = rect.x;
-			clonedEl.$_y = rect.y;
-			clonedEl.style.position = "absolute";
-			if(pos === "fixed") {
-				clonedEl.$_x = rect.x + window.pageXOffset;
-				clonedEl.$_y = rect.y + window.pageYOffset;				
-			}
-	
-			clone.appendChild(clonedEl);						
-			
-			if(rect.x < left) { left = rect.x; }
-			if(rect.y < top) { top = rect.y; }
-			if(rect.x + rect.width > right) { right = rect.x + rect.width; };
-			if(rect.y + rect.height > bottom) { bottom = rect.y + rect.height; };
-		});
-		
-		
-		return {clone, top, left, bottom, right};
-	}
-	
-	_setupMultiClone(els, event, type) {
-		const cloneObj = this._createABunchOfClones(els, event, type);	
-		const x = cloneObj.left;
-		const y = cloneObj.top;
-		const h = cloneObj.bottom - cloneObj.top;
-		const w = cloneObj.right - cloneObj.left;		
-		const clone = cloneObj.clone;		
-
-		clone.style.position = "absolute";
-		
-		const children = clone.children;
-		for(let i=0, ii=children.length; i<ii; i++) {
-			const c = children[i];		
-			c.style.left = (c.$_x-x)+"px";
-			c.style.top = (c.$_y-y)+"px";	
-		}
-		
-		return {clone, rect: {x, y, width: w, height: h}};
-	}
-
-	_setupSingleClone(el, event, type) {
-		const originalRect = this._getRect(el);
-		const x = originalRect.x;
-		const y = originalRect.y;
-		const pos = originalRect.position;	
-		const clone = (type === "copy") ? this._createCopyClone(el) : this._createCheapClone(el);
-		
-		if(pos !== "fixed" && pos !== "absolute") {
-			clone.style.position = "absolute";
-		}
-				
-		return {clone, rect: originalRect};
-	}	
-	
-	_setupClone(el, event, config, type=null) {
-		if(type === null) {return;}	
-		
-		const list = this._getDraggableList(el, config);
-		const cloneObj = (list.length === 1) ? this._setupSingleClone(list[0], event, type) : this._setupMultiClone(list, event, type);	
-
-		clone = cloneObj.clone;
-		clone.id = "cloneAnchor";
-		clone.style.left = cloneObj.rect.x+"px";
-		clone.style.top = cloneObj.rect.y+"px";		
-		//clone.style.width = cloneObj.rect.width+"px";
-		//clone.style.height = cloneObj.rect.height+"px";
-		clone.style.pointerEvents = "none";		
-		
-		event._cloneStartX = cloneObj.rect.x;
-		event._cloneStartY = cloneObj.rect.y;		
-		
-		document.body.appendChild(clone);
-	}
-	
 	_setTempStyle() {
 		this.styleBackup = document.body.style.userSelect;
 		document.body.style.userSelect = "none";
@@ -196,11 +73,6 @@ class DragAndDrop {
 		for(const p in dragAndDropParameters) {
 			dragAndDropParameters[p] = null;
 		}	
-		
-		if(clone !== null) {
-			document.body.removeChild(clone);
-			clone = null;	
-		}
 
 		document.body.style.userSelect = this.styleBackup;
 		document.removeEventListener("mousemove", dragging);
@@ -278,6 +150,7 @@ class DragAndDrop {
 				}
 			}
 			
+			this._writeDroppableParameters(dndParams, event.target, event, config, null);
 			callbacks.notify(callbacks.getEvent("dragstopAfterAllDroppables"), dndParams);
 		}
 	
@@ -285,18 +158,18 @@ class DragAndDrop {
 		this.processingDroppables = false;
 
 		callbacks.notify(callbacks.getEvent("dragstopAlways"), dndParams);
-		
+	
 		this._reset();
 	}
 
-	_initDroppableWatcher(config, dndParams, callback) {		
+	_initDroppableWatcher(config, dndParams, callbacks) {		
 		if(this.processingDroppables) {
 			return;
 		}	
 		
 		const _this = this;
 		document.addEventListener("mouseup", function inlineCallbackOnce(event2) {
-			setTimeout(()=>{ _this._evaluateDroppableWatcher(event2, config, dndParams, callback); },1);
+			setTimeout(()=>{ _this._evaluateDroppableWatcher(event2, config, dndParams, callbacks); },1);
 			document.removeEventListener("mouseup", inlineCallbackOnce, true);
 		}, true);
 		
@@ -331,7 +204,9 @@ class DragAndDrop {
 		params.draggableX = xy.x;
 		params.draggableY = xy.y;
 		params.draggableNewX = params.draggableX;
-		params.draggableNewY = params.draggableY;		
+		params.draggableNewY = params.draggableY;
+
+		params.draggableList = this._getDraggableList(el, config);
 	}
 	
 	_mouseup(el, event, config, data) {
@@ -344,8 +219,6 @@ class DragAndDrop {
 		this._writeDraggableParameters(dragAndDropParameters, el, event, config, data);
 
 		this._initDroppableWatcher(config, dragAndDropParameters, callbacks);
-
-		this._setupClone(el, dragAndDropParameters, "copy");
 
 		this._setTempStyle();
 
