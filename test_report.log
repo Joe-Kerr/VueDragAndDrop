@@ -4,9 +4,9 @@
 
   cloneController.js
     √ createClone does nothing if type null
-    √ createClone creates one DOM node as cloneAnchor (122ms)
-    √ createClone creates child DOM nodes of draggables parameter (42ms)
-    √ createClone sets willChange according to config (72ms)
+    √ createClone creates one DOM node as cloneAnchor (111ms)
+    √ createClone creates child DOM nodes of draggables parameter
+    √ createClone sets willChange according to config (69ms)
     √ updateClone updates transform property of clone anchor
     √ destroyClone removes clone from DOM
 
@@ -20,17 +20,17 @@
     √ directive throws if an undefined event is received in the store callback
 
   dragAndDrop.js - Integration testing
-    √ all adhoc event listeners cleaned up (159ms)
+    √ all adhoc event listeners cleaned up (162ms)
     √ all delegate event listeners cleaned up
     √ all droppable mouseup callbacks fire before evaluation function
-    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (323ms)
+    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (317ms)
     - refactor tests for callback parameters #todo
-    √ draggable callback receives all draggable parameters (313ms)
-    √ droppable callback receives all parameters (308ms)
-    √ optional custom dragstart callback fires (309ms)
-    √ optional custom drag callback fires (461ms)
-    √ optional custom dragstop callbacks fire when not over droppable (313ms)
-    √ optional custom dragstop callbacks fire when over droppable (317ms)
+    √ draggable callback receives all draggable parameters (319ms)
+    √ droppable callback receives all parameters (325ms)
+    √ optional custom dragstart callback fires (313ms)
+    √ optional custom drag callback fires (466ms)
+    √ optional custom dragstop callbacks fire when not over droppable (316ms)
+    √ optional custom dragstop callbacks fire when over droppable (315ms)
 
   dragAndDrop.js
     √ addEventListener calls config parser with config parameter

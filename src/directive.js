@@ -38,7 +38,7 @@ function getConfig(context, mode, vnode) {
 	return config;
 }
 
-function getCallbacks(params, config, subsystems) {
+function getCallbacks(params={}, config, subsystems) {
 	const callbacks = new subsystems.PubSub();
 	
 	if(!config.draggableOnly) {
