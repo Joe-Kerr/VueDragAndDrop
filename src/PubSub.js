@@ -42,9 +42,9 @@ class PubSub {
 PubSub.events = {
 	"dragstart": "dragstart",
 	"dragmove": "dragmove",
-	"dragstopOnDroppable": "dragstopOnDroppable",
-	"dragstopAfterAllDroppables": "dragstopAfterAllDroppables",
-	"dragstopAlways": "dragstopAlways",
+	"dragstopOnDroppable": "droppingOver",
+	"dragstopAfterAllDroppables": "droppedAll",
+	"dragstopAlways": "dragstop",
 };
 
 export default PubSub;

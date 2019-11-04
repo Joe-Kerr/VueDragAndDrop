@@ -1,6 +1,3 @@
-import PubSub from "./PubSub.js";
-import {createClone, updateClone, destroyClone} from "./cloneController.js";
-
 let notifyStore;
 
 function getMode(arg) {	
@@ -32,29 +29,37 @@ function getConfig(context, mode, vnode) {
 		type: params.type,
 		greedy: (context.modifiers.greedy === true),
 		draggableOnly: (context.modifiers.only === true),
-		multiDrag: (params.multi !== undefined) ? ()=>vnode.context[params.multi] : null
+		
+		multiDrag: (params.multi !== undefined) ? ()=>vnode.context[params.multi] : null,	
+		cloneType: (params.cloneType !== undefined) ? params.cloneType: "copy",
+		cloneWillChangeThreshold: (params.cloneType !== undefined) ? params.cloneWillChangeThreshold : 0
 	};
 
 	return config;
 }
 
-function getCallbacks(params, config) {
-	const callbacks = new PubSub();
-	const events = PubSub.events;
+function getCallbacks(params, config, subsystems) {
+	const callbacks = new subsystems.PubSub();
 	
 	if(!config.draggableOnly) {
-		callbacks.subscribe(events.dragstart, storeCallback);
-		callbacks.subscribe(events.dragstopOnDroppable, storeCallback);
-		callbacks.subscribe(events.dragstopAlways, storeCallback);
+		callbacks.subscribe("dragstart", storeCallback);
+		callbacks.subscribe("droppingOver", storeCallback);
+		callbacks.subscribe("dragstop", storeCallback);
 	}
 	
-	callbacks.subscribe(events.dragstart, createClone);
-	callbacks.subscribe(events.dragmove, updateClone);
-	callbacks.subscribe(events.dragstopAlways, destroyClone);	
+	callbacks.subscribe("dragstart", function createCloneAdapter(event, data) {
+		subsystems.cloneController.createClone(data.draggableList, {type: config.cloneType, willChange: config.cloneWillChangeThreshold});
+	});
 	
-	if(typeof params.drag === "function") {callbacks.subscribe(events.dragmove, params.drag);}
-	if(typeof params.dragstop === "function") {callbacks.subscribe(events.dragstopAfterAllDroppables, params.dragstop);}
-	if(typeof params.dragstart === "function") {callbacks.subscribe(events.dragstart, params.dragstart);}
+	callbacks.subscribe("dragmove", function createCloneAdapter(event, data) {
+		subsystems.cloneController.updateClone(data);
+	});
+	
+	callbacks.subscribe("dragstop", subsystems.cloneController.destroyClone);	
+	
+	if(typeof params.drag === "function") {callbacks.subscribe("dragmove", params.drag);}
+	if(typeof params.dragstop === "function") {callbacks.subscribe("droppedAll", params.dragstop);}
+	if(typeof params.dragstart === "function") {callbacks.subscribe("dragstart", params.dragstart);}
 	
 	return callbacks;
 }
@@ -64,7 +69,7 @@ function getData(value={}) {
 }
 
 function storeCallback(event, data) {
-	const map = {dragstart: "draggable", dragstopOnDroppable: "droppable", dragstopAlways: "done"};
+	const map = {dragstart: "draggable", droppingOver: "droppable", dragstop: "done"};
 	const command = map[event];
 	
 	if(command === undefined) {
@@ -74,10 +79,10 @@ function storeCallback(event, data) {
 	notifyStore(command, data);
 }
 
-function dragAndDrop(store, DragAndDrop, options={}) {
-	const dragAndDrop = new DragAndDrop();
+function dragAndDrop(store, subsystems, options={}) {
+	const dragAndDrop = new subsystems.DragAndDrop();
 	const namespace = options.namespace;
-
+	
 	notifyStore = (action, data)=>{store.dispatch(namespace+"/"+action, data);}
 
 	//context.arg = v-dir:arg
@@ -91,7 +96,7 @@ function dragAndDrop(store, DragAndDrop, options={}) {
 			const data = getData(context.value);	
 			const elMoving = getEl(elHandle, context.value);
 			const config = getConfig(context, mode, vnode);			
-			const callbacks = getCallbacks(context.value, config);
+			const callbacks = getCallbacks(context.value, config, subsystems);
 		
 			dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);			
 		},

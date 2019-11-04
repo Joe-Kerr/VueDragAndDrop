@@ -164,6 +164,11 @@ const helper = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+var cloneController_namespaceObject = {};
+__webpack_require__.r(cloneController_namespaceObject);
+__webpack_require__.d(cloneController_namespaceObject, "destroyClone", function() { return destroyClone; });
+__webpack_require__.d(cloneController_namespaceObject, "updateClone", function() { return updateClone; });
+__webpack_require__.d(cloneController_namespaceObject, "createClone", function() { return createClone; });
 var getters_namespaceObject = {};
 __webpack_require__.r(getters_namespaceObject);
 __webpack_require__.d(getters_namespaceObject, "getArrayElWIdxByIdFactory", function() { return getArrayElWIdxByIdFactory; });
@@ -441,14 +446,48 @@ function getConfig(context, mode, vnode) {
     type: params.type,
     greedy: context.modifiers.greedy === true,
     draggableOnly: context.modifiers.only === true,
-    drag: params.drag,
-    dragstop: params.dragstop,
-    dragstart: params.dragstart,
     multiDrag: params.multi !== undefined ? function () {
       return vnode.context[params.multi];
-    } : null
+    } : null,
+    cloneType: params.cloneType !== undefined ? params.cloneType : "copy",
+    cloneWillChangeThreshold: params.cloneType !== undefined ? params.cloneWillChangeThreshold : 0
   };
   return config;
+}
+
+function getCallbacks(params, config, subsystems) {
+  var callbacks = new subsystems.PubSub();
+
+  if (!config.draggableOnly) {
+    callbacks.subscribe("dragstart", storeCallback);
+    callbacks.subscribe("droppingOver", storeCallback);
+    callbacks.subscribe("dragstop", storeCallback);
+  }
+
+  callbacks.subscribe("dragstart", function createCloneAdapter(event, data) {
+    subsystems.cloneController.createClone(data.draggableList, {
+      type: config.cloneType,
+      willChange: config.cloneWillChangeThreshold
+    });
+  });
+  callbacks.subscribe("dragmove", function createCloneAdapter(event, data) {
+    subsystems.cloneController.updateClone(data);
+  });
+  callbacks.subscribe("dragstop", subsystems.cloneController.destroyClone);
+
+  if (typeof params.drag === "function") {
+    callbacks.subscribe("dragmove", params.drag);
+  }
+
+  if (typeof params.dragstop === "function") {
+    callbacks.subscribe("droppedAll", params.dragstop);
+  }
+
+  if (typeof params.dragstart === "function") {
+    callbacks.subscribe("dragstart", params.dragstart);
+  }
+
+  return callbacks;
 }
 
 function getData() {
@@ -458,9 +497,9 @@ function getData() {
 
 function storeCallback(event, data) {
   var map = {
-    mousedown: "draggable",
-    mouseup: "droppable",
-    mouseupAlways: "done"
+    dragstart: "draggable",
+    droppingOver: "droppable",
+    dragstop: "done"
   };
   var command = map[event];
 
@@ -471,9 +510,9 @@ function storeCallback(event, data) {
   notifyStore(command, data);
 }
 
-function dragAndDrop(store, DragAndDrop) {
+function dragAndDrop(store, subsystems) {
   var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var dragAndDrop = new DragAndDrop();
+  var dragAndDrop = new subsystems.DragAndDrop();
   var namespace = options.namespace;
 
   notifyStore = function notifyStore(action, data) {
@@ -490,7 +529,8 @@ function dragAndDrop(store, DragAndDrop) {
       var data = getData(context.value);
       var elMoving = getEl(elHandle, context.value);
       var config = getConfig(context, mode, vnode);
-      dragAndDrop.addEventListener(elHandle, elMoving, config, data, storeCallback);
+      var callbacks = getCallbacks(context.value, config, subsystems);
+      dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);
     },
     unbind: function unbind(el, context, vnode) {
       dragAndDrop.removeEventListener(context.arg, el);
@@ -506,7 +546,6 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var clone = null;
 var dragging;
 var dragAndDropParameters = {
   startX: null,
@@ -522,13 +561,12 @@ var dragAndDropParameters = {
   draggableNewY: null,
   draggableType: null,
   draggableData: null,
+  draggableList: null,
   droppableEl: null,
   droppableX: null,
   droppableY: null,
   droppableType: null,
-  droppableData: null,
-  _cloneStartX: null,
-  _cloneStartY: null
+  droppableData: null
 };
 
 var defaultDragging = function defaultDragging(_event) {
@@ -539,13 +577,6 @@ var defaultDragging = function defaultDragging(_event) {
   var deltaY = dnd.curY - dnd.startY;
   dnd.draggableNewX = dnd.draggableX + deltaX;
   dnd.draggableNewY = dnd.draggableY + deltaY;
-
-  if (clone === null) {
-    return;
-  }
-
-  clone.style.left = dnd._cloneStartX + deltaX + "px";
-  clone.style.top = dnd._cloneStartY + deltaY + "px";
 };
 
 var DragAndDrop =
@@ -579,160 +610,6 @@ function () {
         height: originalRect.height,
         position: elPos
       };
-    } /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
-    ///  Solutions are not really great. For now, leave it as heuristic carbon copy.
-
-  }, {
-    key: "_createCopyClone",
-    value: function _createCopyClone(el) {
-      var clone = el.cloneNode(true);
-      var style = document.defaultView.getComputedStyle(el, null);
-      clone.style.color = style.color;
-      clone.style.backgroundColor = style.backgroundColor;
-      clone.style.border = style.border;
-      clone.style.borderRadius = style.borderRadius;
-      clone.style.margin = "0px";
-      clone.style.opacity = 0.6;
-      return clone;
-    }
-  }, {
-    key: "_createCheapClone",
-    value: function _createCheapClone(el) {
-      var clone = el.cloneNode(false); //low performance grey box
-
-      clone.style.border = "1px solid yellow";
-      clone.style.boxShadow = "box-shadow: 0px 0px 9px 5px rgba(231,166,26,1)";
-      clone.style.backgroundColor = "#eeeeee";
-      return clone;
-    }
-  }, {
-    key: "_createABunchOfClones",
-    value: function _createABunchOfClones(els, event, type) {
-      var _this2 = this;
-
-      var clone = document.createElement("div");
-
-      var initRect = this._getRect(els[0]);
-
-      var top = initRect.y;
-      var left = initRect.x;
-      var bottom = top + initRect.height;
-      var right = left + initRect.width;
-      els.forEach(function (el) {
-        var rect = _this2._getRect(el);
-
-        var pos = rect.position;
-        var clonedEl = type === "copy" ? _this2._createCopyClone(el) : _this2._createCheapClone(el);
-        clonedEl.id = "cloned_" + clonedEl.id;
-        clonedEl.$_x = rect.x;
-        clonedEl.$_y = rect.y;
-        clonedEl.style.position = "absolute";
-
-        if (pos === "fixed") {
-          clonedEl.$_x = rect.x + window.pageXOffset;
-          clonedEl.$_y = rect.y + window.pageYOffset;
-        }
-
-        clone.appendChild(clonedEl);
-
-        if (rect.x < left) {
-          left = rect.x;
-        }
-
-        if (rect.y < top) {
-          top = rect.y;
-        }
-
-        if (rect.x + rect.width > right) {
-          right = rect.x + rect.width;
-        }
-
-        ;
-
-        if (rect.y + rect.height > bottom) {
-          bottom = rect.y + rect.height;
-        }
-
-        ;
-      });
-      return {
-        clone: clone,
-        top: top,
-        left: left,
-        bottom: bottom,
-        right: right
-      };
-    }
-  }, {
-    key: "_setupMultiClone",
-    value: function _setupMultiClone(els, event, type) {
-      var cloneObj = this._createABunchOfClones(els, event, type);
-
-      var x = cloneObj.left;
-      var y = cloneObj.top;
-      var h = cloneObj.bottom - cloneObj.top;
-      var w = cloneObj.right - cloneObj.left;
-      var clone = cloneObj.clone;
-      clone.style.position = "absolute";
-      var children = clone.children;
-
-      for (var i = 0, ii = children.length; i < ii; i++) {
-        var c = children[i];
-        c.style.left = c.$_x - x + "px";
-        c.style.top = c.$_y - y + "px";
-      }
-
-      return {
-        clone: clone,
-        rect: {
-          x: x,
-          y: y,
-          width: w,
-          height: h
-        }
-      };
-    }
-  }, {
-    key: "_setupSingleClone",
-    value: function _setupSingleClone(el, event, type) {
-      var originalRect = this._getRect(el);
-
-      var x = originalRect.x;
-      var y = originalRect.y;
-      var pos = originalRect.position;
-      var clone = type === "copy" ? this._createCopyClone(el) : this._createCheapClone(el);
-
-      if (pos !== "fixed" && pos !== "absolute") {
-        clone.style.position = "absolute";
-      }
-
-      return {
-        clone: clone,
-        rect: originalRect
-      };
-    }
-  }, {
-    key: "_setupClone",
-    value: function _setupClone(el, event, config) {
-      var type = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-
-      if (type === null) {
-        return;
-      }
-
-      var list = this._getDraggableList(el, config);
-
-      var cloneObj = list.length === 1 ? this._setupSingleClone(list[0], event, type) : this._setupMultiClone(list, event, type);
-      clone = cloneObj.clone;
-      clone.id = "cloneAnchor";
-      clone.style.left = cloneObj.rect.x + "px";
-      clone.style.top = cloneObj.rect.y + "px"; //clone.style.width = cloneObj.rect.width+"px";
-      //clone.style.height = cloneObj.rect.height+"px";
-
-      clone.style.pointerEvents = "none";
-      event._cloneStartX = cloneObj.rect.x;
-      event._cloneStartY = cloneObj.rect.y;
-      document.body.appendChild(clone);
     }
   }, {
     key: "_setTempStyle",
@@ -748,11 +625,6 @@ function () {
 
       for (var p in dragAndDropParameters) {
         dragAndDropParameters[p] = null;
-      }
-
-      if (clone !== null) {
-        document.body.removeChild(clone);
-        clone = null;
       }
 
       document.body.style.userSelect = this.styleBackup;
@@ -816,7 +688,7 @@ function () {
 
   }, {
     key: "_evaluateDroppableWatcher",
-    value: function _evaluateDroppableWatcher(event, config, dndParams, callback) {
+    value: function _evaluateDroppableWatcher(event, config, dndParams, callbacks) {
       if (this.draggableGotRemoved === false) {
         var selfIdx = this._evaluateDropOnSelf(dndParams.draggableEl, this.droppables);
 
@@ -832,29 +704,27 @@ function () {
 
           this._writeDroppableParameters(dndParams, droppable.el, event, config, droppable.data);
 
-          callback("mouseup", dndParams);
+          callbacks.notify("droppingOver", dndParams);
 
           if (droppable.greedy) {
             break;
           }
         }
 
-        if (typeof config.dragstop === "function") {
-          this._writeDroppableParameters(dndParams, event.target, event, config, null);
+        this._writeDroppableParameters(dndParams, event.target, event, config, null);
 
-          config.dragstop("mouseup", dndParams);
-        }
+        callbacks.notify("droppedAll", dndParams);
       }
 
       this.droppables.splice(0, this.droppables.length);
       this.processingDroppables = false;
-      callback("mouseupAlways", dndParams);
+      callbacks.notify("dragstop", dndParams);
 
       this._reset();
     }
   }, {
     key: "_initDroppableWatcher",
-    value: function _initDroppableWatcher(config, dndParams, callback) {
+    value: function _initDroppableWatcher(config, dndParams, callbacks) {
       if (this.processingDroppables) {
         return;
       }
@@ -863,7 +733,7 @@ function () {
 
       document.addEventListener("mouseup", function inlineCallbackOnce(event2) {
         setTimeout(function () {
-          _this._evaluateDroppableWatcher(event2, config, dndParams, callback);
+          _this._evaluateDroppableWatcher(event2, config, dndParams, callbacks);
         }, 1);
         document.removeEventListener("mouseup", inlineCallbackOnce, true);
       }, true);
@@ -902,6 +772,7 @@ function () {
       params.draggableY = xy.y;
       params.draggableNewX = params.draggableX;
       params.draggableNewY = params.draggableY;
+      params.draggableList = this._getDraggableList(el, config);
     }
   }, {
     key: "_mouseup",
@@ -915,37 +786,27 @@ function () {
     }
   }, {
     key: "_mousedown",
-    value: function _mousedown(el, event, config, data, callback) {
+    value: function _mousedown(el, event, config, data, callbacks) {
       this.isDragging = true;
 
       this._writeDraggableParameters(dragAndDropParameters, el, event, config, data);
 
-      this._initDroppableWatcher(config, dragAndDropParameters, callback);
-
-      this._setupClone(el, dragAndDropParameters, config, "copy");
+      this._initDroppableWatcher(config, dragAndDropParameters, callbacks);
 
       this._setTempStyle();
 
-      if (typeof config.drag === "function") {
-        dragging = function draggingWithCallback(event) {
-          defaultDragging(event);
-          config.drag("mousedown", dragAndDropParameters);
-        };
-      } else {
-        dragging = defaultDragging;
-      }
+      dragging = function draggingWithCallback(event) {
+        defaultDragging(event);
+        callbacks.notify("dragmove", dragAndDropParameters);
+      };
 
       document.addEventListener("mousemove", dragging);
-      callback("mousedown", dragAndDropParameters);
-
-      if (typeof config.dragstart === "function") {
-        config.dragstart("mousedown", dragAndDropParameters);
-      }
+      callbacks.notify("dragstart", dragAndDropParameters);
     }
   }, {
     key: "addEventListener",
-    value: function addEventListener(elSource, elMoving, config, data, _callback) {
-      var _this3 = this;
+    value: function addEventListener(elSource, elMoving, config, data, callbacks) {
+      var _this2 = this;
 
       this._parseConfig(config);
 
@@ -953,10 +814,9 @@ function () {
       var id = this.listeners.length;
 
       if (mode === "draggable") {
-        var callback = config.draggableOnly === false ? _callback : function () {};
         this.listeners[id] = {
           cb: function cb(event) {
-            _this3._mousedown(elMoving, event, config, data, callback);
+            _this2._mousedown(elMoving, event, config, data, callbacks);
           },
           el: elSource
         };
@@ -964,7 +824,7 @@ function () {
       } else if (mode === "droppable") {
         this.listeners[id] = {
           cb: function cb(event) {
-            _this3._mouseup(elMoving, event, config, data);
+            _this2._mouseup(elMoving, event, config, data);
           },
           el: elSource
         };
@@ -1006,6 +866,259 @@ function () {
 }();
 
 /* harmony default export */ var src_DragAndDrop = (DragAndDrop);
+// CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/PubSub.js
+function PubSub_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function PubSub_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function PubSub_createClass(Constructor, protoProps, staticProps) { if (protoProps) PubSub_defineProperties(Constructor.prototype, protoProps); if (staticProps) PubSub_defineProperties(Constructor, staticProps); return Constructor; }
+
+var PubSub =
+/*#__PURE__*/
+function () {
+  function PubSub() {
+    PubSub_classCallCheck(this, PubSub);
+
+    var events = PubSub.events;
+
+    for (var event in events) {
+      this[events[event]] = [];
+    }
+  }
+
+  PubSub_createClass(PubSub, [{
+    key: "subscribe",
+    value: function subscribe(event, callback) {
+      var subs = this[event];
+
+      if (subs === undefined) {
+        throw new Error("Tried to subscribe to undefined event: " + event);
+      }
+
+      subs.push(callback);
+    }
+  }, {
+    key: "notify",
+    value: function notify(event, data) {
+      var subs = this[event];
+
+      if (subs === undefined) {
+        throw new Error("Tried to notify undefined event: " + event);
+      }
+
+      for (var i = 0, ii = subs.length; i < ii; i++) {
+        subs[i](event, data);
+      }
+    }
+  }, {
+    key: "getEvent",
+    value: function getEvent(name) {
+      var event = PubSub.events[name];
+
+      if (event === undefined) {
+        throw new Error("Event not found with key: " + name);
+      }
+
+      return event;
+    }
+  }]);
+
+  return PubSub;
+}();
+
+PubSub.events = {
+  "dragstart": "dragstart",
+  "dragmove": "dragmove",
+  "dragstopOnDroppable": "droppingOver",
+  "dragstopAfterAllDroppables": "droppedAll",
+  "dragstopAlways": "dragstop"
+};
+/* harmony default export */ var src_PubSub = (PubSub);
+// CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/cloneController.js
+var clone = null;
+var cloneStartX = null;
+var cloneStartY = null;
+
+function getRect(el) {
+  var originalRect = el.getBoundingClientRect();
+  var elPos = window.getComputedStyle(el).position;
+  var x = elPos !== "fixed" ? originalRect.x + window.pageXOffset : originalRect.x;
+  var y = elPos !== "fixed" ? originalRect.y + window.pageYOffset : originalRect.y;
+  return {
+    x: x,
+    y: y,
+    width: originalRect.width,
+    height: originalRect.height,
+    position: elPos
+  };
+} /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
+///  Solutions are not really great. For now, leave it as heuristic carbon copy.
+
+
+function createCopyClone(el) {
+  var clone = el.cloneNode(true);
+  var style = document.defaultView.getComputedStyle(el, null);
+  clone.style.color = style.color;
+  clone.style.backgroundColor = style.backgroundColor;
+  clone.style.border = style.border;
+  clone.style.borderRadius = style.borderRadius;
+  clone.style.margin = "0px";
+  clone.style.opacity = 0.6;
+  return clone;
+}
+
+function createCheapClone(el) {
+  var clone = el.cloneNode(false); //"low" performance grey box
+
+  clone.style.border = "1px solid yellow";
+  clone.style.boxShadow = "box-shadow: 0px 0px 9px 5px rgba(231,166,26,1)";
+  clone.style.backgroundColor = "#eeeeee";
+  return clone;
+}
+
+function createABunchOfClones(els, type) {
+  var clone = document.createElement("div");
+  var initRect = getRect(els[0]);
+  var top = initRect.y;
+  var left = initRect.x;
+  var bottom = top + initRect.height;
+  var right = left + initRect.width;
+  els.forEach(function (el) {
+    var rect = getRect(el);
+    var pos = rect.position;
+    var clonedEl = type === "copy" ? createCopyClone(el) : createCheapClone(el);
+    clonedEl.id = "cloned_" + clonedEl.id;
+    clonedEl.$_x = rect.x;
+    clonedEl.$_y = rect.y;
+    clonedEl.style.position = "absolute";
+
+    if (pos === "fixed") {
+      clonedEl.$_x = rect.x + window.pageXOffset;
+      clonedEl.$_y = rect.y + window.pageYOffset;
+    }
+
+    clone.appendChild(clonedEl);
+
+    if (rect.x < left) {
+      left = rect.x;
+    }
+
+    if (rect.y < top) {
+      top = rect.y;
+    }
+
+    if (rect.x + rect.width > right) {
+      right = rect.x + rect.width;
+    }
+
+    ;
+
+    if (rect.y + rect.height > bottom) {
+      bottom = rect.y + rect.height;
+    }
+
+    ;
+  });
+  return {
+    clone: clone,
+    top: top,
+    left: left,
+    bottom: bottom,
+    right: right
+  };
+}
+
+function setupMultiClone(els, type) {
+  var cloneObj = createABunchOfClones(els, type);
+  var x = cloneObj.left;
+  var y = cloneObj.top;
+  var h = cloneObj.bottom - cloneObj.top;
+  var w = cloneObj.right - cloneObj.left;
+  var clone = cloneObj.clone;
+  clone.style.position = "absolute";
+  var children = clone.children;
+
+  for (var i = 0, ii = children.length; i < ii; i++) {
+    var c = children[i];
+    c.style.left = c.$_x - x + "px";
+    c.style.top = c.$_y - y + "px";
+  }
+
+  return {
+    clone: clone,
+    rect: {
+      x: x,
+      y: y,
+      width: w,
+      height: h
+    }
+  };
+}
+
+function setupSingleClone(el, type) {
+  var originalRect = getRect(el);
+  var x = originalRect.x;
+  var y = originalRect.y;
+  var pos = originalRect.position;
+  var clone = type === "copy" ? createCopyClone(el) : createCheapClone(el);
+
+  if (pos !== "fixed" && pos !== "absolute") {
+    clone.style.position = "absolute";
+  }
+
+  return {
+    clone: clone,
+    rect: originalRect
+  };
+}
+
+function setupClone(draggables, config) {
+  if (config.type === null) {
+    return;
+  }
+
+  var list = draggables;
+  var cloneObj = list.length === 1 ? setupSingleClone(list[0], config.type) : setupMultiClone(list, config.type);
+  clone = cloneObj.clone;
+  clone.id = "cloneAnchor";
+  clone.style.left = cloneObj.rect.x + "px";
+  clone.style.top = cloneObj.rect.y + "px"; //clone.style.width = cloneObj.rect.width+"px";
+  //clone.style.height = cloneObj.rect.height+"px";
+
+  clone.style.pointerEvents = "none";
+
+  if (config.willChange > 0 && list.length >= config.willChange) {
+    clone.style["will-change"] = "transform";
+  }
+
+  cloneStartX = cloneObj.rect.x;
+  cloneStartY = cloneObj.rect.y;
+  document.body.appendChild(clone);
+}
+
+function destroyClone() {
+  if (clone !== null) {
+    document.body.removeChild(clone);
+    clone = null;
+    cloneStartX = null;
+    cloneStartY = null;
+  }
+}
+function updateClone(data) {
+  if (clone === null) {
+    return;
+  }
+
+  var deltaX = data.curX - data.startX;
+  var deltaY = data.curY - data.startY; //clone.style.left = (cloneStartX+deltaX) +"px";
+  //clone.style.top = (cloneStartY+deltaY) +"px";	
+
+  clone.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
+  clone.style.transition = "0s";
+}
+function createClone(draggables, config) {
+  setupClone(draggables, config);
+}
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/node_modules/vuex-heman/src/getters.js
 const {helper} = __webpack_require__("63e8");
 
@@ -1671,6 +1784,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
 
 
+ //import Clone from "./Clone.js";
+
+
 
 
 function parseConfig() {
@@ -1697,7 +1813,12 @@ var installer = {
     var options = parseConfig(config);
     var namespace = options.namespace;
     cats4Vue.registerVuexModule(vuex, namespace, src_store);
-    Vue.directive(options.directive, directive(vuex, src_DragAndDrop, {
+    var subsystems = {
+      DragAndDrop: src_DragAndDrop,
+      PubSub: src_PubSub,
+      cloneController: cloneController_namespaceObject
+    };
+    Vue.directive(options.directive, directive(vuex, subsystems, {
       namespace: namespace,
       delegateEvents: options.delegateEvents
     }));

@@ -1,6 +1,9 @@
 import {cats4Vue} from "cats4vue";
 import installDirective from "./directive.js";
 import DragAndDrop from "./DragAndDrop.js";
+import PubSub from "./PubSub.js";
+//import Clone from "./Clone.js";
+import * as cloneController from "./cloneController";
 
 import store from "./store.js";
 
@@ -22,7 +25,8 @@ export const installer = {install: function(Vue, config) {
 	
 	cats4Vue.registerVuexModule(vuex, namespace, store);
 
-	Vue.directive(options.directive, installDirective(vuex, DragAndDrop, {namespace, delegateEvents: options.delegateEvents}));
+	const subsystems = {DragAndDrop, PubSub, cloneController};
+	Vue.directive(options.directive, installDirective(vuex, subsystems, {namespace, delegateEvents: options.delegateEvents}));
 }}
 
 export default installer;

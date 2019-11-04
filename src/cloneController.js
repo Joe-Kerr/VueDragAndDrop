@@ -38,7 +38,7 @@ function createCheapClone(el) {
 	return clone;
 }	
 
-function createABunchOfClones(els, event, type) {
+function createABunchOfClones(els, type) {
 	const clone = document.createElement("div");
 	const initRect = getRect(els[0]);
 	
@@ -73,8 +73,8 @@ function createABunchOfClones(els, event, type) {
 	return {clone, top, left, bottom, right};
 }
 
-function setupMultiClone(els, event, type) {
-	const cloneObj = createABunchOfClones(els, event, type);	
+function setupMultiClone(els, type) {
+	const cloneObj = createABunchOfClones(els, type);	
 	const x = cloneObj.left;
 	const y = cloneObj.top;
 	const h = cloneObj.bottom - cloneObj.top;
@@ -93,7 +93,7 @@ function setupMultiClone(els, event, type) {
 	return {clone, rect: {x, y, width: w, height: h}};
 }
 
-function setupSingleClone(el, event, type) {
+function setupSingleClone(el, type) {
 	const originalRect = getRect(el);
 	const x = originalRect.x;
 	const y = originalRect.y;
@@ -107,11 +107,11 @@ function setupSingleClone(el, event, type) {
 	return {clone, rect: originalRect};
 }	
 
-function setupClone(el, event, type=null) {		
-	if(type === null) {return;}	
+function setupClone(draggables, config) {		
+	if(config.type === null) {return;}	
 
-	const list = event.draggableList;
-	const cloneObj = (list.length === 1) ? setupSingleClone(list[0], event, type) : setupMultiClone(list, event, type);	
+	const list = draggables;
+	const cloneObj = (list.length === 1) ? setupSingleClone(list[0], config.type) : setupMultiClone(list, config.type);	
 
 	clone = cloneObj.clone;
 	clone.id = "cloneAnchor";
@@ -121,7 +121,7 @@ function setupClone(el, event, type=null) {
 	//clone.style.height = cloneObj.rect.height+"px";
 	clone.style.pointerEvents = "none";		
 	
-	if(list.length > 30) {
+	if(config.willChange > 0 && list.length >= config.willChange) {
 		clone.style["will-change"] = "transform";
 	}
 	
@@ -129,18 +129,6 @@ function setupClone(el, event, type=null) {
 	cloneStartY = cloneObj.rect.y;		
 	
 	document.body.appendChild(clone);
-}
-
-export function updateClone(event, data) {
-	if(clone === null) {return;}
-
-	const deltaX = data.curX - data.startX;
-	const deltaY = data.curY - data.startY;
-
-	//clone.style.left = (cloneStartX+deltaX) +"px";
-	//clone.style.top = (cloneStartY+deltaY) +"px";	
-	clone.style.transform = "translate("+deltaX+"px, "+deltaY+"px)";
-	clone.style.transition = "0s";
 }
 
 export function destroyClone() {
@@ -152,6 +140,18 @@ export function destroyClone() {
 	}	
 }
 
-export function createClone(event, data) {
-	setupClone(data.draggableEl, data, "copy");
+export function updateClone(data) {
+	if(clone === null) {return;}
+
+	const deltaX = data.curX - data.startX;
+	const deltaY = data.curY - data.startY;
+
+	//clone.style.left = (cloneStartX+deltaX) +"px";
+	//clone.style.top = (cloneStartY+deltaY) +"px";	
+	clone.style.transform = "translate("+deltaX+"px, "+deltaY+"px)";
+	clone.style.transition = "0s";
+}
+
+export function createClone(draggables, config) {
+	setupClone(draggables, config);
 }

@@ -5,20 +5,35 @@ const PubSub = require("../../src/PubSub.js").default;
 
 suite("directive.js");
 
+const addEventListener = new sinon.fake();
+const removeEventListener = new sinon.fake();
+
+function getSubsystems() {
+	const noop = ()=>{};
+	return {
+		DragAndDrop: function S1() {this.addEventListener = addEventListener; this.removeEventListener = removeEventListener;},
+		PubSub,
+		cloneController: {createClone: noop, updateClone: noop, destroyClone: noop}
+	}
+}
+
+afterEach(()=>{
+	addEventListener.resetHistory();
+	removeEventListener.resetHistory();
+});
+
 test("directive returns install function", ()=>{
 	assert.equal(typeof sample, "function");
 });
 
 test("directive installer returns object with properties inserted and unbind", ()=>{
-	const directive = sample(null, function dnd(){});
+	const directive = sample(null, getSubsystems());
 	assert.ok("inserted" in directive);
 	assert.ok("unbind" in directive);
 });
 
 test("inserted calls dragAndDrop with correct parameters", ()=>{
-	const addEventListener = new sinon.fake();
-	function Dnd() {this.addEventListener = addEventListener;}
-	const directive = sample(null, Dnd);
+	const directive = sample(null, getSubsystems());
 	
 	const el = {DOM: "element"}
 	const context = {
@@ -43,9 +58,7 @@ test("inserted calls dragAndDrop with correct parameters", ()=>{
 });
 
 test("unbind calls dragAndDrop with correct parameters", ()=>{
-	const removeEventListener = new sinon.fake();
-	function Dnd() {this.removeEventListener = removeEventListener}
-	const directive = sample(null, Dnd);
+	const directive = sample(null, getSubsystems());	
 	
 	const el = {DOM: "element"}
 	const context = {
@@ -59,8 +72,7 @@ test("unbind calls dragAndDrop with correct parameters", ()=>{
 });
 
 test("directive throws if arg is not 'draggable' / 'droppable'", ()=>{
-	function Dnd() {this.addEventListener = addEventListener;}
-	const directive = sample(null, Dnd);	
+	const directive = sample(null, getSubsystems());	
 	const context = {
 		arg: "neitherDraggableNorDroppable",
 		value: {},
@@ -76,8 +88,7 @@ test("directive throws if arg is not 'draggable' / 'droppable'", ()=>{
 });
 
 test("directive throws if the selector option does not return DOM element", ()=>{
-	function Dnd() {this.removeEventListener = removeEventListener;}
-	const directive = sample(null, Dnd);	
+	const directive = sample(null, getSubsystems());	
 	const context = {
 		arg: "draggable",
 		value: {selector: "#bollocks"},
@@ -87,11 +98,9 @@ test("directive throws if the selector option does not return DOM element", ()=>
 	assert.throws(()=>{ directive.inserted({}, context); }, {message: /did not return a DOM element/});
 });
 
-test("directive throws if an undefined event is received in the store callback", ()=>{
-	function Dnd() {this.addEventListener = addEventListener;}
-	const addEventListener = new sinon.fake();
+test("directive throws if an undefined event is received in the store callback", ()=>{	
 	const store = {dispatch: ()=>{}}
-	const directive = sample(store, Dnd);
+	const directive = sample(store, getSubsystems());
 	const events = PubSub.events;
 	
 	const el = {DOM: "element"}

@@ -88,19 +88,6 @@ afterEach(()=>{
 });
 
 
-test("clone setup and cleanup", async ()=>{
-	return;
-	const org = defaultElement();
-	org.id = "test";
-	
-	sample._mousedown(org, defaultEvent(), config(), {}, callbacks());	
-	assert.notEqual(global.document.getElementById("cloneAnchor"), null);
-	
-	await trigger("mouseup");	
-
-	assert.equal(global.document.getElementById("cloneAnchor"), null);
-});
-
 test("all adhoc event listeners cleaned up", async ()=>{
 	sample._mousedown(defaultElement(), defaultEvent(), config(), {}, callbacks());
 

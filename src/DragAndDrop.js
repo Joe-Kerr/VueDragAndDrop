@@ -143,7 +143,7 @@ class DragAndDrop {
 			
 				config.droppableType = droppable.type;
 				this._writeDroppableParameters(dndParams, droppable.el, event, config, droppable.data);
-				callbacks.notify(callbacks.getEvent("dragstopOnDroppable"), dndParams);
+				callbacks.notify("droppingOver", dndParams);
 				
 				if(droppable.greedy) {
 					break;
@@ -151,13 +151,13 @@ class DragAndDrop {
 			}
 			
 			this._writeDroppableParameters(dndParams, event.target, event, config, null);
-			callbacks.notify(callbacks.getEvent("dragstopAfterAllDroppables"), dndParams);
+			callbacks.notify("droppedAll", dndParams);
 		}
 	
 		this.droppables.splice(0, this.droppables.length);
 		this.processingDroppables = false;
 
-		callbacks.notify(callbacks.getEvent("dragstopAlways"), dndParams);
+		callbacks.notify("dragstop", dndParams);
 	
 		this._reset();
 	}
@@ -222,11 +222,11 @@ class DragAndDrop {
 
 		this._setTempStyle();
 
-		dragging = function draggingWithCallback(event) {defaultDragging(event); callbacks.notify(callbacks.getEvent("dragmove"), dragAndDropParameters);}
+		dragging = function draggingWithCallback(event) {defaultDragging(event); callbacks.notify("dragmove", dragAndDropParameters);}
 		
 		document.addEventListener("mousemove", dragging);	
 		
-		callbacks.notify(callbacks.getEvent("dragstart"), dragAndDropParameters);
+		callbacks.notify("dragstart", dragAndDropParameters);
 	}
 
 	addEventListener(elSource, elMoving, config, data, callbacks) {

@@ -141,8 +141,23 @@ Callback function that triggers after the mousedown event.
 
 Callback function that triggers after the mouseup event.
 
-### multi< array >
+### multi< string > **experimental**
 
+Name of the property (computed, data, props) that holds a multi drag selection of DOM nodes that should be moved. Default: undefined
+
+### cloneType< string > **experimental**
+
+What should the draggable clone/s look like.
+
+- "copy": deep copy of the node/s being dragged
+- "cheap": grey box instead of the node/s being dragged
+- null: do not render clone
+
+Default: "copy"
+
+### cloneWillChangeThreshold< number > **experimental**
+
+How many draggables in a multiselection does it require to set the css property "willChange". Can improve performance greatly **if** used sparsely. Default: 0 (do not set willChange)
 
 
 ## Directive modifiers
@@ -191,6 +206,7 @@ The store actions you [have registered](#link-draggables-with-droppables) receiv
 - draggableNewY: new y position after movement of DOM element
 - draggableType: type of the draggable provided in the directive
 - draggableData: user defined data provided in the directive
+- draggableList: list of DOM nodes that are being dragged
 
 - droppableEl: DOM element of the droppable element
 - droppableX: x position of DOM element
