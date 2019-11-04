@@ -2,7 +2,6 @@ import {cats4Vue} from "cats4vue";
 import installDirective from "./directive.js";
 import DragAndDrop from "./DragAndDrop.js";
 import PubSub from "./PubSub.js";
-//import Clone from "./Clone.js";
 import * as cloneController from "./cloneController";
 
 import store from "./store.js";

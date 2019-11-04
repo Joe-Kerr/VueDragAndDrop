@@ -146,8 +146,6 @@ export function updateClone(data) {
 	const deltaX = data.curX - data.startX;
 	const deltaY = data.curY - data.startY;
 
-	//clone.style.left = (cloneStartX+deltaX) +"px";
-	//clone.style.top = (cloneStartY+deltaY) +"px";	
 	clone.style.transform = "translate("+deltaX+"px, "+deltaY+"px)";
 	clone.style.transition = "0s";
 }

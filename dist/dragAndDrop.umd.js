@@ -1082,8 +1082,10 @@ function setupClone(draggables, config) {
   clone = cloneObj.clone;
   clone.id = "cloneAnchor";
   clone.style.left = cloneObj.rect.x + "px";
-  clone.style.top = cloneObj.rect.y + "px"; //clone.style.width = cloneObj.rect.width+"px";
-  //clone.style.height = cloneObj.rect.height+"px";
+  clone.style.top = cloneObj.rect.y + "px"; //
+
+  clone.style.width = cloneObj.rect.width + "px";
+  clone.style.height = cloneObj.rect.height + "px"; //
 
   clone.style.pointerEvents = "none";
 
@@ -1110,9 +1112,7 @@ function updateClone(data) {
   }
 
   var deltaX = data.curX - data.startX;
-  var deltaY = data.curY - data.startY; //clone.style.left = (cloneStartX+deltaX) +"px";
-  //clone.style.top = (cloneStartY+deltaY) +"px";	
-
+  var deltaY = data.curY - data.startY;
   clone.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
   clone.style.transition = "0s";
 }
@@ -1784,7 +1784,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
 
 
- //import Clone from "./Clone.js";
 
 
 
