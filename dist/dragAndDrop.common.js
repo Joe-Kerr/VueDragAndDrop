@@ -446,7 +446,10 @@ function getConfig(context, mode, vnode) {
   return config;
 }
 
-function getCallbacks(params, config, subsystems) {
+function getCallbacks() {
+  var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var config = arguments.length > 1 ? arguments[1] : undefined;
+  var subsystems = arguments.length > 2 ? arguments[2] : undefined;
   var callbacks = new subsystems.PubSub();
 
   if (!config.draggableOnly) {
@@ -928,19 +931,25 @@ PubSub.events = {
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/cloneController.js
 var clone = null;
 var cloneStartX = null;
-var cloneStartY = null;
+var cloneStartY = null; // https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth = innerWidth+padding; 0 for inline/css-less
+// boundingRect = innerWidth + padding + margin + border + scrollBar
 
 function getRect(el) {
   var originalRect = el.getBoundingClientRect();
-  var elPos = window.getComputedStyle(el).position;
+  var cstyles = window.getComputedStyle(el);
+  var elPos = cstyles.position;
   var x = elPos !== "fixed" ? originalRect.x + window.pageXOffset : originalRect.x;
   var y = elPos !== "fixed" ? originalRect.y + window.pageYOffset : originalRect.y;
+  var innerWidth = parseInt(cstyles.width.replace("px", ""));
+  var innerHeight = parseInt(cstyles.height.replace("px", ""));
   return {
     x: x,
     y: y,
     width: originalRect.width,
     height: originalRect.height,
-    position: elPos
+    position: elPos,
+    innerWidth: innerWidth,
+    innerHeight: innerHeight
   };
 } /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
 ///  Solutions are not really great. For now, leave it as heuristic carbon copy.
@@ -982,6 +991,8 @@ function createABunchOfClones(els, type) {
     clonedEl.$_x = rect.x;
     clonedEl.$_y = rect.y;
     clonedEl.style.position = "absolute";
+    clonedEl.style.width = rect.innerWidth + "px";
+    clonedEl.style.height = rect.innerHeight + "px";
 
     if (pos === "fixed") {
       clonedEl.$_x = rect.x + window.pageXOffset;
@@ -1057,6 +1068,8 @@ function setupSingleClone(el, type) {
     clone.style.position = "absolute";
   }
 
+  clone.style.width = originalRect.innerWidth + "px";
+  clone.style.height = originalRect.innerHeight + "px";
   return {
     clone: clone,
     rect: originalRect
@@ -1073,10 +1086,8 @@ function setupClone(draggables, config) {
   clone = cloneObj.clone;
   clone.id = "cloneAnchor";
   clone.style.left = cloneObj.rect.x + "px";
-  clone.style.top = cloneObj.rect.y + "px"; //
-
-  clone.style.width = cloneObj.rect.width + "px";
-  clone.style.height = cloneObj.rect.height + "px"; //
+  clone.style.top = cloneObj.rect.y + "px"; //clone.style.width = cloneObj.rect.width+"px";
+  //clone.style.height = cloneObj.rect.height+"px";
 
   clone.style.pointerEvents = "none";
 

@@ -2,14 +2,20 @@ let clone = null;
 let cloneStartX = null;
 let cloneStartY = null;
 
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth = innerWidth+padding; 0 for inline/css-less
+// boundingRect = innerWidth + padding + margin + border + scrollBar
 function getRect(el) {
 	let originalRect = el.getBoundingClientRect();
-	const elPos = window.getComputedStyle(el).position;
+	const cstyles = window.getComputedStyle(el);
+	const elPos = cstyles.position;
 
 	const x = (elPos !== "fixed") ? originalRect.x+window.pageXOffset : originalRect.x;
 	const y = (elPos !== "fixed") ? originalRect.y+window.pageYOffset : originalRect.y;			
 	
-	return {x, y, width: originalRect.width, height: originalRect.height, position: elPos};
+	const innerWidth = parseInt(cstyles.width.replace("px", ""));
+	const innerHeight = parseInt(cstyles.height.replace("px", ""));
+	
+	return {x, y, width: originalRect.width, height: originalRect.height, position: elPos, innerWidth, innerHeight};
 }
 
 /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
@@ -56,6 +62,8 @@ function createABunchOfClones(els, type) {
 		clonedEl.$_x = rect.x;
 		clonedEl.$_y = rect.y;
 		clonedEl.style.position = "absolute";
+		clonedEl.style.width = rect.innerWidth+"px";
+		clonedEl.style.height = rect.innerHeight+"px";		
 		if(pos === "fixed") {
 			clonedEl.$_x = rect.x + window.pageXOffset;
 			clonedEl.$_y = rect.y + window.pageYOffset;				
@@ -103,6 +111,9 @@ function setupSingleClone(el, type) {
 	if(pos !== "fixed" && pos !== "absolute") {
 		clone.style.position = "absolute";
 	}
+	
+	clone.style.width = originalRect.innerWidth+"px";
+	clone.style.height = originalRect.innerHeight+"px";
 			
 	return {clone, rect: originalRect};
 }	
