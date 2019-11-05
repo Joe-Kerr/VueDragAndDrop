@@ -185,7 +185,7 @@ test("draggable callback receives all draggable parameters", async ()=>{
 	
 	//jsdom is not aware of layout
 	const paramsNotNull = [
-		"startX", "startY", "curX", "curY", 
+		"startX", "startY", "curX", "curY", "deltaX", "deltaY",
 		"draggableEl", "draggableX", "draggableY", "draggableNewX", "draggableNewY", "draggableType", "draggableData", "draggableList"
 	];
 	
@@ -240,6 +240,8 @@ test("droppable callback receives all parameters", async ()=>{
 		"endY",
 		"curX",
 		"curY",
+		"deltaX",
+		"deltaY",
 
 		"draggableEl",
 		"draggableX",

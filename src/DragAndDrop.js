@@ -7,6 +7,8 @@ const dragAndDropParameters = {
 	endY: null,
 	curX: null,
 	curY: null,
+	deltaX: null,
+	deltaY: null,
 	
 	draggableEl: null,
 	draggableX: null,
@@ -32,6 +34,8 @@ const defaultDragging = function defaultDragging(_event) {
 	const deltaX = dnd.curX - dnd.startX;
 	const deltaY = dnd.curY - dnd.startY;
 	
+	dnd.deltaX = deltaX;
+	dnd.deltaY = deltaY;
 	dnd.draggableNewX = dnd.draggableX + deltaX;
 	dnd.draggableNewY = dnd.draggableY + deltaY;
 }
@@ -203,6 +207,8 @@ class DragAndDrop {
 		params.startY = event.pageY;
 		params.curX = event.pageX;
 		params.curY = event.pageY;
+		params.deltaX = 0;
+		params.deltaY = 0;		
 		
 		params.draggableData = data;
 		params.draggableType = config.draggableType;

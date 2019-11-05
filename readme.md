@@ -198,6 +198,8 @@ The store actions you [have registered](#link-draggables-with-droppables) receiv
 - endY: y position on mouseup/dragsstop
 - curX: x position on mousemove/dragging
 - curY: y position on mousemove/dragging
+- deltaX: distance on x-axis of mousemove since dragstart
+- deltaY: distance on y-axis of mousemove since dragstart
 
 - draggableEl: DOM element of the draggable
 - draggableX: x position of DOM element
