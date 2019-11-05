@@ -119,8 +119,6 @@ class DragAndDrop {
 		if(config.type === undefined && (config.greedy === false && config.draggableOnly === false)) {
 			throw new Error("Directive requires 'type' value unless modifiers draggable.only OR droppable.greedy are given.");
 		}	
-		
-		config.delegate = document.getElementById(config.delegate)
 				
 		const isDraggable = (config.mode === "draggable");		
 		config.draggableType = (isDraggable) ? config.type : null;
@@ -138,7 +136,6 @@ class DragAndDrop {
 		return [draggableTarget];
 	}
 	
-	//document.body.contains(dndParams.draggableEl) //should I check for "illegal" removes? As Vue plugin probably not; as D&D class probably yes  #todo
 	_evaluateDroppableWatcher(event, config, dndParams, callbacks) {
 		if(this.draggableGotRemoved === false) {
 			const selfIdx = this._evaluateDropOnSelf(dndParams.draggableEl, this.droppables);

@@ -18,8 +18,7 @@ function getRect(el) {
 	return {x, y, width: originalRect.width, height: originalRect.height, position: elPos, innerWidth, innerHeight};
 }
 
-/// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
-///  Solutions are not really great. For now, leave it as heuristic carbon copy.
+// Not really carbon copy, see e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
 function createCopyClone(el) {
 	const clone = el.cloneNode(true);
 	const style = document.defaultView.getComputedStyle(el, null);
@@ -47,6 +46,7 @@ function createCheapClone(el) {
 function createABunchOfClones(els, type) {
 	const clone = document.createElement("div");
 	const initRect = getRect(els[0]);
+	const postProcRects = [];
 	
 	let top = initRect.y;
 	let left = initRect.x;
@@ -55,28 +55,29 @@ function createABunchOfClones(els, type) {
 	
 	els.forEach((el)=>{ 
 		const rect = getRect(el);
-		const pos = rect.position;			
-		const clonedEl = (type === "copy") ? createCopyClone(el) : createCheapClone(el);
-		
-		clonedEl.id = "cloned_"+clonedEl.id;
-		clonedEl.$_x = rect.x;
-		clonedEl.$_y = rect.y;
-		clonedEl.style.position = "absolute";
-		clonedEl.style.width = rect.innerWidth+"px";
-		clonedEl.style.height = rect.innerHeight+"px";		
-		if(pos === "fixed") {
-			clonedEl.$_x = rect.x + window.pageXOffset;
-			clonedEl.$_y = rect.y + window.pageYOffset;				
-		}
-
-		clone.appendChild(clonedEl);						
-		
 		if(rect.x < left) { left = rect.x; }
 		if(rect.y < top) { top = rect.y; }
 		if(rect.x + rect.width > right) { right = rect.x + rect.width; };
 		if(rect.y + rect.height > bottom) { bottom = rect.y + rect.height; };
+		postProcRects.push(rect);			
 	});
 	
+	els.forEach((el, i)=>{
+		const rect = postProcRects[i];
+		const pos = rect.position;			
+		const clonedEl = (type === "copy") ? createCopyClone(el) : createCheapClone(el);		
+		const x = rect.x + ( (pos === "fixed") ? window.pageXOffset : 0 ) - left;
+		const y = rect.y + ( (pos === "fixed") ? window.pageYOffset : 0 ) - top;
+		
+		clonedEl.id = "cloned_"+clonedEl.id;
+		clonedEl.style.position = "absolute";
+		clonedEl.style.left = x+"px";
+		clonedEl.style.top = y+"px";			
+		clonedEl.style.width = rect.innerWidth+"px";
+		clonedEl.style.height = rect.innerHeight+"px";		
+
+		clone.appendChild(clonedEl);						
+	});
 	
 	return {clone, top, left, bottom, right};
 }
@@ -90,14 +91,7 @@ function setupMultiClone(els, type) {
 	const clone = cloneObj.clone;		
 
 	clone.style.position = "absolute";
-	
-	const children = clone.children;
-	for(let i=0, ii=children.length; i<ii; i++) {
-		const c = children[i];		
-		c.style.left = (c.$_x-x)+"px";
-		c.style.top = (c.$_y-y)+"px";	
-	}
-	
+
 	return {clone, rect: {x, y, width: w, height: h}};
 }
 
@@ -121,18 +115,16 @@ function setupSingleClone(el, type) {
 function setupClone(draggables, config) {		
 	if(config.type === null) {return;}	
 
-	const list = draggables;
-	const cloneObj = (list.length === 1) ? setupSingleClone(list[0], config.type) : setupMultiClone(list, config.type);	
+	const cloneObj = (draggables.length === 1) ? setupSingleClone(draggables[0], config.type) : setupMultiClone(draggables, config.type);	
 
 	clone = cloneObj.clone;
 	clone.id = "cloneAnchor";
 	clone.style.left = cloneObj.rect.x+"px";
 	clone.style.top = cloneObj.rect.y+"px";		
-	//clone.style.width = cloneObj.rect.width+"px";
-	//clone.style.height = cloneObj.rect.height+"px";
-	clone.style.pointerEvents = "none";		
+	clone.style.pointerEvents = "none";	
+	clone.style.transition = "0s";
 	
-	if(config.willChange > 0 && list.length >= config.willChange) {
+	if(config.willChange > 0 && draggables.length >= config.willChange) {
 		clone.style["will-change"] = "transform";
 	}
 	
@@ -143,22 +135,18 @@ function setupClone(draggables, config) {
 }
 
 export function destroyClone() {
-	if(clone !== null) {
-		document.body.removeChild(clone);
-		clone = null;
-		cloneStartX = null;
-		cloneStartY = null;
-	}	
+	if(clone === null) {return;}
+
+	document.body.removeChild(clone);
+	clone = null;
+	cloneStartX = null;
+	cloneStartY = null;	
 }
 
 export function updateClone(data) {
 	if(clone === null) {return;}
 
-	const deltaX = data.curX - data.startX;
-	const deltaY = data.curY - data.startY;
-
-	clone.style.transform = "translate("+deltaX+"px, "+deltaY+"px)";
-	clone.style.transition = "0s";
+	clone.style.transform = "translate("+data.deltaX+"px, "+data.deltaY+"px)";
 }
 
 export function createClone(draggables, config) {

@@ -98,7 +98,7 @@ test("updateClone updates transform property of clone anchor", ()=>{
 	const type = "copy";
 	createClone(draggables, {type});	
 	
-	updateClone({curX: 10, startX: 4, curY: 20, startY: 7});
+	updateClone({deltaX: 6, deltaY: 13});
 	const anchor = getClone();
 	assert.equal(anchor.style.transform, "translate(6px, 13px)");
 		

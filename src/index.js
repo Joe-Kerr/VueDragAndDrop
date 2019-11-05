@@ -17,10 +17,9 @@ function parseConfig(config={}) {
 }
 
 export const installer = {install: function(Vue, config) {
-	const {vuex} = config;
-	
 	const options = parseConfig(config);
 	const {namespace} = options;
+	const {vuex} = config;
 	
 	cats4Vue.registerVuexModule(vuex, namespace, store);
 

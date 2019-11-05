@@ -40,6 +40,7 @@ function getConfig(context, mode, vnode) {
 
 function getCallbacks(params={}, config, subsystems) {
 	const callbacks = new subsystems.PubSub();
+	const cloneController = subsystems.cloneController;
 	
 	if(!config.draggableOnly) {
 		callbacks.subscribe("dragstart", storeCallback);
@@ -48,14 +49,14 @@ function getCallbacks(params={}, config, subsystems) {
 	}
 	
 	callbacks.subscribe("dragstart", function createCloneAdapter(event, data) {
-		subsystems.cloneController.createClone(data.draggableList, {type: config.cloneType, willChange: config.cloneWillChangeThreshold});
+		cloneController.createClone(data.draggableList, {type: config.cloneType, willChange: config.cloneWillChangeThreshold});
 	});
 	
 	callbacks.subscribe("dragmove", function createCloneAdapter(event, data) {
-		subsystems.cloneController.updateClone(data);
+		cloneController.updateClone(data);
 	});
 	
-	callbacks.subscribe("dragstop", subsystems.cloneController.destroyClone);	
+	callbacks.subscribe("dragstop", cloneController.destroyClone);	
 	
 	if(typeof params.drag === "function") {callbacks.subscribe("dragmove", params.drag);}
 	if(typeof params.dragstop === "function") {callbacks.subscribe("droppedAll", params.dragstop);}
@@ -91,15 +92,15 @@ function dragAndDrop(store, subsystems, options={}) {
 	
 	return {
 		inserted(el, context, vnode) {
-			const elHandle = el;
 			const mode = getMode(context.arg);	
 			const data = getData(context.value);	
-			const elMoving = getEl(elHandle, context.value);
+			const elMoving = getEl(el, context.value);
 			const config = getConfig(context, mode, vnode);			
 			const callbacks = getCallbacks(context.value, config, subsystems);
 		
-			dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);			
+			dragAndDrop.addEventListener(el, elMoving, config, data, callbacks);			
 		},
+		
 		unbind(el, context, vnode) {
 			dragAndDrop.removeEventListener(context.arg, el);
 		}

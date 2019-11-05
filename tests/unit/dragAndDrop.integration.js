@@ -173,67 +173,9 @@ test("call to removeEventListener mid dragging prevents droppable mouseup callba
 	document.body.removeChild(droppable1);	
 });
 
-test("refactor tests for callback parameters #todo");
-
-test("draggable callback receives all draggable parameters", async ()=>{	
-	let params = {};
-	const callbackTest = (e,p)=>{params=p;}
-
-	const cbs = callbacks();
-	const dragstart = cbs.getEvent("dragstart");
-	cbs.subscribe(dragstart, callbackTest);
-	
-	//jsdom is not aware of layout
-	const paramsNotNull = [
-		"startX", "startY", "curX", "curY", "deltaX", "deltaY",
-		"draggableEl", "draggableX", "draggableY", "draggableNewX", "draggableNewY", "draggableType", "draggableData", "draggableList"
-	];
-	
-	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
-	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs});
-
-	await trigger("mousedown", draggable1);	
-
-	for(const param in params) {
-		const val = params[param];
-	
-		if(paramsNotNull.indexOf(param) > -1) {
-			assert.notStrictEqual(val, null, "Expected '"+param+"' in draggable callback parameters to be not null.");
-		}
-		else {
-			assert.strictEqual(val, null, "Expected '"+param+"' in draggable callback parameters to be null.");
-		}
-	}
-	
-	paramsNotNull.forEach((param)=>{
-		assert.ok(param in params, "Parameter "+param+" missing in draggable callback parameters.")
-	});		
-	
-	await trigger("mouseup", droppable1);		
-	sample.removeEventListener("draggable", draggable1);
-	sample.removeEventListener("droppable", droppable1);
-	document.body.removeChild(draggable1);
-	document.body.removeChild(droppable1);		
-});
-
-test("droppable callback receives all parameters", async ()=>{	
-	let params = {};
-	const callbackTest = (e,p)=>{
-		for(const param in p) {
-			const val = p[param];
-			
-			if(val === null) {continue;}
-			
-			params[param] = val;
-		}
-	}
-	
-	const cbs = callbacks();
-	const dragstop = cbs.getEvent("dragstopAlways");
-	cbs.subscribe(dragstop, callbackTest);	
-
-	//jsdom is not aware of layout
-	const paramsNotNull = [
+//jsdom does not provide pageX/Y
+test("all callbacks fire with parameters", async ()=>{
+	const dndParameters = [
 		"startX",
 		"startY",
 		"endX",
@@ -256,35 +198,59 @@ test("droppable callback receives all parameters", async ()=>{
 		"droppableX",
 		"droppableY",	
 		"droppableType",		
-		//"droppableData"	
-	];
+		"droppableData"
+	];	
+	
+	function assertAllParamsPresent(allParams, cbParams) {
+		allParams.forEach((param)=>{
+			for(const event in cbParams) {
+				const cbParamsOfEvent = cbParams[event];
 
+				assert.ok(param in cbParamsOfEvent, "Expected parameter '"+param+"' to be provided to event '"+event+"'.");
+			}
+		});
+	}
+	
+	function assertNoUnknownParams(allParams, cbParams) {
+			for(const event in cbParams) {
+				const cbParamsOfEvent = cbParams[event];
+
+				for(const singleEventParam in cbParamsOfEvent) {
+					assert.ok(allParams.indexOf(singleEventParam) > -1, "Unknown parameter '"+singleEventParam+"' provided to event '"+event+"'.");
+				}
+			}		
+	}
+	
+	let calls = 0;
+	const callbackParams = {
+		dragstart: null,
+		dragmove: null,
+		droppingOver: null,
+		droppedAll: null,
+		dragstop: null,
+	};
+	const fakeCallback = (e,p)=>{ calls++; callbackParams[e] = Object.assign({}, p); }
+	const cbs = callbacks();
+	
+	for(const event in callbackParams) { cbs.subscribe(event, fakeCallback); }
+	
 	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
 	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs});	
 	
 	await trigger("mousedown", draggable1);	
+	await trigger("mousemove");	
+	await trigger("mouseup", droppable1);		
 	
-	await trigger("mouseup", droppable1);	
+	assert.equal(Object.keys(callbackParams).length, calls);
 	
-	for(const param in params) {
-		const val = params[param];
-		
-		if(paramsNotNull.indexOf(param) > -1) {
-			assert.notStrictEqual(val, null, "Expected '"+param+"' in droppable callback parameters to be not null.");
-		}
-		else {
-			assert.strictEqual(val, null, "Expected '"+param+"' in droppable callback parameters to be null.");
-		}				
-	}
+	assertAllParamsPresent(dndParameters, callbackParams);
+	assertNoUnknownParams(dndParameters, callbackParams);
+	//console.log(callbackParams)
 	
-	paramsNotNull.forEach((param)=>{
-		assert.ok(param in params, "Parameter "+param+" missing in droppable callback parameters.")
-	});	
-		
 	sample.removeEventListener("draggable", draggable1);
 	sample.removeEventListener("droppable", droppable1);
 	document.body.removeChild(draggable1);
-	document.body.removeChild(droppable1);			
+	document.body.removeChild(droppable1);		
 });
 
 test("optional custom dragstart callback fires", async ()=>{

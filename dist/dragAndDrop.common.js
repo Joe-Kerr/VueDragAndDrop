@@ -451,6 +451,7 @@ function getCallbacks() {
   var config = arguments.length > 1 ? arguments[1] : undefined;
   var subsystems = arguments.length > 2 ? arguments[2] : undefined;
   var callbacks = new subsystems.PubSub();
+  var cloneController = subsystems.cloneController;
 
   if (!config.draggableOnly) {
     callbacks.subscribe("dragstart", storeCallback);
@@ -459,15 +460,15 @@ function getCallbacks() {
   }
 
   callbacks.subscribe("dragstart", function createCloneAdapter(event, data) {
-    subsystems.cloneController.createClone(data.draggableList, {
+    cloneController.createClone(data.draggableList, {
       type: config.cloneType,
       willChange: config.cloneWillChangeThreshold
     });
   });
   callbacks.subscribe("dragmove", function createCloneAdapter(event, data) {
-    subsystems.cloneController.updateClone(data);
+    cloneController.updateClone(data);
   });
-  callbacks.subscribe("dragstop", subsystems.cloneController.destroyClone);
+  callbacks.subscribe("dragstop", cloneController.destroyClone);
 
   if (typeof params.drag === "function") {
     callbacks.subscribe("dragmove", params.drag);
@@ -518,13 +519,12 @@ function dragAndDrop(store, subsystems) {
 
   return {
     inserted: function inserted(el, context, vnode) {
-      var elHandle = el;
       var mode = getMode(context.arg);
       var data = getData(context.value);
-      var elMoving = getEl(elHandle, context.value);
+      var elMoving = getEl(el, context.value);
       var config = getConfig(context, mode, vnode);
       var callbacks = getCallbacks(context.value, config, subsystems);
-      dragAndDrop.addEventListener(elHandle, elMoving, config, data, callbacks);
+      dragAndDrop.addEventListener(el, elMoving, config, data, callbacks);
     },
     unbind: function unbind(el, context, vnode) {
       dragAndDrop.removeEventListener(context.arg, el);
@@ -534,6 +534,8 @@ function dragAndDrop(store, subsystems) {
 
 /* harmony default export */ var directive = (dragAndDrop);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/DragAndDrop.js
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -548,6 +550,8 @@ var dragAndDropParameters = {
   endY: null,
   curX: null,
   curY: null,
+  deltaX: null,
+  deltaY: null,
   draggableEl: null,
   draggableX: null,
   draggableY: null,
@@ -569,6 +573,8 @@ var defaultDragging = function defaultDragging(_event) {
   dnd.curY = _event.pageY;
   var deltaX = dnd.curX - dnd.startX;
   var deltaY = dnd.curY - dnd.startY;
+  dnd.deltaX = deltaX;
+  dnd.deltaY = deltaY;
   dnd.draggableNewX = dnd.draggableX + deltaX;
   dnd.draggableNewY = dnd.draggableY + deltaY;
 };
@@ -645,6 +651,13 @@ function () {
       }
     }
   }, {
+    key: "_verifyCallbacks",
+    value: function _verifyCallbacks(callbacks) {
+      if (_typeof(callbacks) !== "object" || typeof callbacks.notify !== "function") {
+        throw new Error("callbacks parameter must be an object holding a property 'notify' if type function.");
+      }
+    }
+  }, {
     key: "_parseConfig",
     value: function _parseConfig(config) {
       this._verifyMode(config.mode);
@@ -661,7 +674,6 @@ function () {
         throw new Error("Directive requires 'type' value unless modifiers draggable.only OR droppable.greedy are given.");
       }
 
-      config.delegate = document.getElementById(config.delegate);
       var isDraggable = config.mode === "draggable";
       config.draggableType = isDraggable ? config.type : null;
       config.droppableType = !isDraggable ? config.type : null;
@@ -678,8 +690,7 @@ function () {
       }
 
       return [draggableTarget];
-    } //document.body.contains(dndParams.draggableEl) //should I check for "illegal" removes? As Vue plugin probably not; as D&D class probably yes  #todo
-
+    }
   }, {
     key: "_evaluateDroppableWatcher",
     value: function _evaluateDroppableWatcher(event, config, dndParams, callbacks) {
@@ -759,6 +770,8 @@ function () {
       params.startY = event.pageY;
       params.curX = event.pageX;
       params.curY = event.pageY;
+      params.deltaX = 0;
+      params.deltaY = 0;
       params.draggableData = data;
       params.draggableType = config.draggableType;
       params.draggableEl = dom;
@@ -803,6 +816,8 @@ function () {
       var _this2 = this;
 
       this._parseConfig(config);
+
+      this._verifyCallbacks(callbacks);
 
       var mode = config.mode;
       var id = this.listeners.length;
@@ -951,8 +966,7 @@ function getRect(el) {
     innerWidth: innerWidth,
     innerHeight: innerHeight
   };
-} /// Not really carbon copy since, as it turns out, some more "elaborate" css will not be copied. See e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
-///  Solutions are not really great. For now, leave it as heuristic carbon copy.
+} // Not really carbon copy, see e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
 
 
 function createCopyClone(el) {
@@ -979,27 +993,13 @@ function createCheapClone(el) {
 function createABunchOfClones(els, type) {
   var clone = document.createElement("div");
   var initRect = getRect(els[0]);
+  var postProcRects = [];
   var top = initRect.y;
   var left = initRect.x;
   var bottom = top + initRect.height;
   var right = left + initRect.width;
   els.forEach(function (el) {
     var rect = getRect(el);
-    var pos = rect.position;
-    var clonedEl = type === "copy" ? createCopyClone(el) : createCheapClone(el);
-    clonedEl.id = "cloned_" + clonedEl.id;
-    clonedEl.$_x = rect.x;
-    clonedEl.$_y = rect.y;
-    clonedEl.style.position = "absolute";
-    clonedEl.style.width = rect.innerWidth + "px";
-    clonedEl.style.height = rect.innerHeight + "px";
-
-    if (pos === "fixed") {
-      clonedEl.$_x = rect.x + window.pageXOffset;
-      clonedEl.$_y = rect.y + window.pageYOffset;
-    }
-
-    clone.appendChild(clonedEl);
 
     if (rect.x < left) {
       left = rect.x;
@@ -1020,6 +1020,21 @@ function createABunchOfClones(els, type) {
     }
 
     ;
+    postProcRects.push(rect);
+  });
+  els.forEach(function (el, i) {
+    var rect = postProcRects[i];
+    var pos = rect.position;
+    var clonedEl = type === "copy" ? createCopyClone(el) : createCheapClone(el);
+    var x = rect.x + (pos === "fixed" ? window.pageXOffset : 0) - left;
+    var y = rect.y + (pos === "fixed" ? window.pageYOffset : 0) - top;
+    clonedEl.id = "cloned_" + clonedEl.id;
+    clonedEl.style.position = "absolute";
+    clonedEl.style.left = x + "px";
+    clonedEl.style.top = y + "px";
+    clonedEl.style.width = rect.innerWidth + "px";
+    clonedEl.style.height = rect.innerHeight + "px";
+    clone.appendChild(clonedEl);
   });
   return {
     clone: clone,
@@ -1038,14 +1053,6 @@ function setupMultiClone(els, type) {
   var w = cloneObj.right - cloneObj.left;
   var clone = cloneObj.clone;
   clone.style.position = "absolute";
-  var children = clone.children;
-
-  for (var i = 0, ii = children.length; i < ii; i++) {
-    var c = children[i];
-    c.style.left = c.$_x - x + "px";
-    c.style.top = c.$_y - y + "px";
-  }
-
   return {
     clone: clone,
     rect: {
@@ -1081,17 +1088,15 @@ function setupClone(draggables, config) {
     return;
   }
 
-  var list = draggables;
-  var cloneObj = list.length === 1 ? setupSingleClone(list[0], config.type) : setupMultiClone(list, config.type);
+  var cloneObj = draggables.length === 1 ? setupSingleClone(draggables[0], config.type) : setupMultiClone(draggables, config.type);
   clone = cloneObj.clone;
   clone.id = "cloneAnchor";
   clone.style.left = cloneObj.rect.x + "px";
-  clone.style.top = cloneObj.rect.y + "px"; //clone.style.width = cloneObj.rect.width+"px";
-  //clone.style.height = cloneObj.rect.height+"px";
-
+  clone.style.top = cloneObj.rect.y + "px";
   clone.style.pointerEvents = "none";
+  clone.style.transition = "0s";
 
-  if (config.willChange > 0 && list.length >= config.willChange) {
+  if (config.willChange > 0 && draggables.length >= config.willChange) {
     clone.style["will-change"] = "transform";
   }
 
@@ -1101,22 +1106,21 @@ function setupClone(draggables, config) {
 }
 
 function destroyClone() {
-  if (clone !== null) {
-    document.body.removeChild(clone);
-    clone = null;
-    cloneStartX = null;
-    cloneStartY = null;
+  if (clone === null) {
+    return;
   }
+
+  document.body.removeChild(clone);
+  clone = null;
+  cloneStartX = null;
+  cloneStartY = null;
 }
 function updateClone(data) {
   if (clone === null) {
     return;
   }
 
-  var deltaX = data.curX - data.startX;
-  var deltaY = data.curY - data.startY;
-  clone.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
-  clone.style.transition = "0s";
+  clone.style.transform = "translate(" + data.deltaX + "px, " + data.deltaY + "px)";
 }
 function createClone(draggables, config) {
   setupClone(draggables, config);
@@ -1694,7 +1698,7 @@ const vuexHeman = {
 
 
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/store.js
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function store_typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { store_typeof = function _typeof(obj) { return typeof obj; }; } else { store_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return store_typeof(obj); }
 
 
 /* harmony default export */ var src_store = ({
@@ -1774,7 +1778,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       });
     },
     register: function register(store, data) {
-      if (typeof data.action === "undefined" || typeof data.dragType === "undefined" || _typeof(data.dropType) === undefined) {
+      if (typeof data.action === "undefined" || typeof data.dragType === "undefined" || store_typeof(data.dropType) === undefined) {
         throw new Error("Missing paratmeter/s: please provide: {action, dragType, dropType}");
       }
 
@@ -1810,9 +1814,9 @@ function parseConfig() {
 
 var installer = {
   install: function install(Vue, config) {
-    var vuex = config.vuex;
     var options = parseConfig(config);
     var namespace = options.namespace;
+    var vuex = config.vuex;
     cats4Vue.registerVuexModule(vuex, namespace, src_store);
     var subsystems = {
       DragAndDrop: src_DragAndDrop,
