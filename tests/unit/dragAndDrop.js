@@ -11,6 +11,8 @@ function createFakeEl() {
 	}
 }
 
+const fakeCallbacks = {notify: ()=>{}};
+
 test("addEventListener calls config parser with config parameter", ()=>{
 	const sample = new Sample();
 	const el = createFakeEl();
@@ -18,7 +20,7 @@ test("addEventListener calls config parser with config parameter", ()=>{
 	
 	sample._parseConfig = new sinon.fake();
 	
-	sample.addEventListener(el, el, config, {}, ()=>{});
+	sample.addEventListener(el, el, config, {}, fakeCallbacks);
 	
 	assert.equal(sample._parseConfig.callCount, 1);
 	assert.equal(sample._parseConfig.lastCall.args[0], config);
@@ -29,7 +31,7 @@ test("addEventListener stores draggable listener information", ()=>{
 	const el = createFakeEl();
 	const config = {mode: "draggable", type: "fake"};	
 	
-	sample.addEventListener(el, el, config, {}, ()=>{});
+	sample.addEventListener(el, el, config, {}, fakeCallbacks);
 	
 	assert.equal(sample.listeners.length, 1);
 	assert.equal(typeof sample.listeners[0].cb, "function");
@@ -41,7 +43,7 @@ test("addEventListener adds draggable event listener", ()=>{
 	const el = createFakeEl();
 	const config = {mode: "draggable", type: "fake"};	
 	
-	sample.addEventListener(el, el, config, {}, ()=>{});
+	sample.addEventListener(el, el, config, {}, fakeCallbacks);
 
 	assert.equal(el.addEventListener.callCount, 1);
 	assert.equal(el.addEventListener.lastCall.args[0], "mousedown");
@@ -53,7 +55,7 @@ test("addEventListener stores droppable listener information", ()=>{
 	const el = createFakeEl();
 	const config = {mode: "droppable", type: "fake"};	
 	
-	sample.addEventListener(el, el, config, {}, ()=>{});
+	sample.addEventListener(el, el, config, {}, fakeCallbacks);
 	
 	assert.equal(sample.listeners.length, 1);
 	assert.equal(typeof sample.listeners[0].cb, "function");
@@ -65,13 +67,23 @@ test("addEventListener adds droppable event listener", ()=>{
 	const el = createFakeEl();
 	const config = {mode: "droppable", type: "fake"};	
 	
-	sample.addEventListener(el, el, config, {}, ()=>{});
+	sample.addEventListener(el, el, config, {}, fakeCallbacks);
 
 	assert.equal(el.addEventListener.callCount, 1);
 	assert.equal(el.addEventListener.lastCall.args[0], "mouseup");
 	assert.equal(typeof el.addEventListener.lastCall.args[1], "function");	
 });
 
+test("addEventListener throws if callbacks parameter has invalid interface", ()=>{
+	const sample = new Sample();
+	const el = createFakeEl();
+	const config = {mode: "droppable", type: "fake"};	
+	
+	assert.throws(()=>{ sample.addEventListener(el, el, config, {} ); }, {message: /callbacks parameter/});	
+	assert.throws(()=>{ sample.addEventListener(el, el, config, {}, []); }, {message: /callbacks parameter/});	
+	assert.throws(()=>{ sample.addEventListener(el, el, config, {}, {}); }, {message: /callbacks parameter/});	
+	assert.throws(()=>{ sample.addEventListener(el, el, config, {}, {notNotify: ()=>{}}); }, {message: /callbacks parameter/});	
+});
 
 test("removeEventListener calls mode verifier with mode parameter", ()=>{
 	const sample = new Sample();

@@ -95,6 +95,12 @@ class DragAndDrop {
 		}		
 	}
 	
+	_verifyCallbacks(callbacks) {
+		if(typeof callbacks !== "object" || typeof callbacks.notify !== "function") {
+			throw new Error("callbacks parameter must be an object holding a property 'notify' if type function.");
+		}
+	}
+	
 	_parseConfig(config) {
 		this._verifyMode(config.mode);
 
@@ -231,6 +237,7 @@ class DragAndDrop {
 
 	addEventListener(elSource, elMoving, config, data, callbacks) {
 		this._parseConfig(config);
+		this._verifyCallbacks(callbacks);
 		
 		const mode = config.mode;
 		const id = this.listeners.length;
