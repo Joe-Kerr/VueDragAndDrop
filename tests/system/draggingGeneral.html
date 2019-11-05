@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="pragma" content="no-cache">			
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'  https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js" />
+		
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js"></script>
+		
+		<style>			
+			body {
+				width: 2048px;
+				height: 2048px;
+			}
+			
+			.draggable {				
+				width: 120px;
+				height: 40px;
+				
+				border: 1px solid blue;
+				z-index: 2;
+				background-color: white;
+			}
+			
+			div > span {
+				background-color: #efefa1;
+			}
+						
+			div > p {
+				background-color: #c4f1c4;
+			}
+			
+			#draggableWithStyle {
+				position: absolute;
+				border: 2px solid black;
+				padding: 4px;
+				margin: 8px;
+				overflow: auto;
+			}
+			
+			#scrollBarsToParent {
+				width: 200px;
+				height: 100px;
+			}
+			
+		</style>
+
+		<title>ready</title>
+	</head>
+
+<body>
+
+<div id="v"></div>
+
+<script src="../../dist/dragAndDrop.umd.js"></script>
+
+<script>
+
+const installer = dragAndDrop.installer;
+
+
+(function() {
+	const store = new Vuex.Store({});
+	
+	Vue.use(installer, {vuex: store})  
+
+	window.v = new Vue({
+		el: "#v",
+		store,
+		template: `
+			<section>	
+				<div v-drag&drop:draggable.only="{dragstop: move}" id="draggableFree" class="draggable" :style="{left: x+'px', top: y+'px', position:'absolute'}">Draggable without droppable</div>
+				
+				<div v-drag&drop:draggable.only="{dragstop: move2}" id="draggableFreeFixed" class="draggable" :style="{left: x2+'px', top: y2+'px', position:'fixed'}">Draggable wo droppable (fixed)</div>
+				
+				<div v-drag&drop:draggable.only="{dragstop: move3}" id="draggableWithStyle" class="draggable" :style="{left: x3+'px', top: y3+'px'}">
+					<div class="scrollBarsToParent">Draggable with padding, margin, etc.</div>
+				</div>
+				
+				
+				<button @click="reset" id="reset" :style="{position: 'fixed', rigt: '0px', bottom: '0px'}">r</button>
+				
+			</section>
+		`,
+		data() {
+			return {
+				x: 130, 
+				y: 0,
+				x2: 260,
+				y2: 0,
+				x3: 390,
+				y3: 0,
+			}
+		},
+		methods: {
+			move(event, data) {
+				this.x = data.draggableNewX;
+				this.y = data.draggableNewY;
+				//console.error(JSON.stringify(data))
+			},
+			move2(event, data) {
+				this.x2 = data.draggableNewX;
+				this.y2 = data.draggableNewY;
+				//console.error(JSON.stringify(data))
+			},
+			move3(event, data) {
+				this.x3 = data.draggableNewX;
+				this.y3 = data.draggableNewY;
+				//console.error(JSON.stringify(data))
+			},
+			reset() {
+				document.title = "reloading";
+				window.location.reload(false);
+			}
+		}
+	
+	});
+})()
+</script>
+
+</body>
+</html>

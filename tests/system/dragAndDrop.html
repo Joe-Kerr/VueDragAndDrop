@@ -13,10 +13,6 @@
 		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js"></script>
 		
-		<!--
-		<script src="../src/directive.js"></script>
-		-->
-		
 		<style>			
 			body {
 				width: 2048px;
@@ -161,9 +157,7 @@ const installer = dragAndDrop.installer;
 					 style="position: absolute; right: 0px;"
 				>draggable and droppable</div>
 				
-				<div v-drag&drop:draggable.only="{dragstop: move}" id="draggableFree" class="draggable" :style="{left: x+'px', top: y+'px', position:'absolute'}">Draggable without droppable</div>
-				
-				<div v-drag&drop:draggable.only="{dragstop: move2}" id="draggableFreeFixed" class="draggable" :style="{left: x2+'px', top: y2+'px', position:'fixed'}">Draggable wo droppable (fixed)</div>
+				<div v-drag&drop:draggable.only="{dragstop: move}" id="draggableFree" class="draggable" :style="{left: x+'px', top: y+'px', position:'absolute'}">Draggable without droppable</div>			
 				
 				<div v-drag&drop:droppable="{type: 'theOuterDroppable'}" id="droppableOuter" class="droppable">
 					<span>Drop target outer</span>
@@ -204,20 +198,13 @@ const installer = dragAndDrop.installer;
 		data() {
 			return {
 				x: 130, 
-				y: 0,
-				x2: 260,
-				y2: 0
+				y: 0
 			}
 		},
 		methods: {
 			move(event, data) {
 				this.x = data.draggableNewX;
 				this.y = data.draggableNewY;
-				//console.error(JSON.stringify(data))
-			},
-			move2(event, data) {
-				this.x2 = data.draggableNewX;
-				this.y2 = data.draggableNewY;
 				//console.error(JSON.stringify(data))
 			},
 			reset() {
