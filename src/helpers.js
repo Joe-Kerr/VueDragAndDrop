@@ -74,10 +74,8 @@ export function getRectAbs(el) {
 
 	rectData.outerWidth = rect.width;
 	rectData.outerHeight = rect.height;
-	rectData.width = rect.outerWidth - borderH - paddingH;;
-	rectData.height = rect.outerHeight - borderV - paddingV;
-	
-console.log(rectData)		
+	rectData.width = rectData.outerWidth - borderH - paddingH;;
+	rectData.height = rectData.outerHeight - borderV - paddingV;	
 	
 	rectId = el;
 	rectCache = rectData;
