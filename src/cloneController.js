@@ -1,34 +1,44 @@
+import {getRectAbs as _getRectAbs} from "./helpers.js";
+
 let clone = null;
 let cloneStartX = null;
 let cloneStartY = null;
 
-// https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth = innerWidth+padding; 0 for inline/css-less
-// boundingRect = innerWidth + padding + margin + border + scrollBar
 function getRect(el) {
-	let originalRect = el.getBoundingClientRect();
-	const cstyles = window.getComputedStyle(el);
-	const elPos = cstyles.position;
-
-	const x = (elPos !== "fixed") ? originalRect.x+window.pageXOffset : originalRect.x;
-	const y = (elPos !== "fixed") ? originalRect.y+window.pageYOffset : originalRect.y;			
-	
-	const innerWidth = parseInt(cstyles.width.replace("px", ""));
-	const innerHeight = parseInt(cstyles.height.replace("px", ""));
-	
-	return {x, y, width: originalRect.width, height: originalRect.height, position: elPos, innerWidth, innerHeight};
+	return _getRectAbs(el);
 }
 
 // Not really carbon copy, see e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
 function createCopyClone(el) {
 	const clone = el.cloneNode(true);
 	const style = document.defaultView.getComputedStyle(el, null);
+	const directions = ["Top", "Left", "Bottom", "Right"];
+	const borderProps = ["Color", "Style", "Width"];
 	
 	clone.style.color = style.color;
 	clone.style.backgroundColor = style.backgroundColor;
-	clone.style.border = style.border;
+		
+	for(let i=0, ii=directions.length; i<ii; i++) {
+		for(let j=0, jj=borderProps.length; j<jj; j++) {
+			const key = "border"+directions[i]+borderProps[j];
+			clone.style[key] = style[key];
+		}
+	}
 	clone.style.borderRadius = style.borderRadius;
 	
-	clone.style.margin = "0px";		
+	clone.style.marginTop = style.marginTop;
+	clone.style.marginRight = style.marginLeft;
+	clone.style.marginLeft = style.marginLeft;
+	clone.style.marginBottom = style.marginBottom;	
+	
+	clone.style.paddingTop = style.paddingTop;
+	clone.style.paddingRight = style.paddingLeft;
+	clone.style.paddingLeft = style.paddingLeft;
+	clone.style.paddingBottom = style.paddingBottom;
+	
+	clone.style.overflow = style.overflow;
+	clone.style.boxSizing = style.boxSizing;
+		
 	clone.style.opacity = 0.6;
 
 	return clone;	
@@ -48,17 +58,17 @@ function createABunchOfClones(els, type) {
 	const initRect = getRect(els[0]);
 	const postProcRects = [];
 	
-	let top = initRect.y;
-	let left = initRect.x;
-	let bottom = top + initRect.height;
-	let right = left + initRect.width;
+	let top = initRect.outerY;
+	let left = initRect.outerX;
+	let bottom = top + initRect.outerHeight;
+	let right = left + initRect.outerWidth;
 	
 	els.forEach((el)=>{ 
 		const rect = getRect(el);
-		if(rect.x < left) { left = rect.x; }
-		if(rect.y < top) { top = rect.y; }
-		if(rect.x + rect.width > right) { right = rect.x + rect.width; };
-		if(rect.y + rect.height > bottom) { bottom = rect.y + rect.height; };
+		if(rect.outerX < left) { left = rect.outerX; }
+		if(rect.outerY < top) { top = rect.outerY; }
+		if(rect.outerX + rect.outerWidth > right) { right = rect.outerX + rect.outerWidth; };
+		if(rect.outerY + rect.outerHeight > bottom) { bottom = rect.outerY + rect.outerHeight; };
 		postProcRects.push(rect);			
 	});
 	
@@ -66,15 +76,17 @@ function createABunchOfClones(els, type) {
 		const rect = postProcRects[i];
 		const pos = rect.position;			
 		const clonedEl = (type === "copy") ? createCopyClone(el) : createCheapClone(el);		
-		const x = rect.x + ( (pos === "fixed") ? window.pageXOffset : 0 ) - left;
-		const y = rect.y + ( (pos === "fixed") ? window.pageYOffset : 0 ) - top;
+		
+		//el [+ fixedToAbsolute] - relativeToParent
+		const x = rect.left + ( (pos === "fixed") ? window.pageXOffset : 0 ) - left;
+		const y = rect.top + ( (pos === "fixed") ? window.pageYOffset : 0 ) - top;
 		
 		clonedEl.id = "cloned_"+clonedEl.id;
 		clonedEl.style.position = "absolute";
 		clonedEl.style.left = x+"px";
 		clonedEl.style.top = y+"px";			
-		clonedEl.style.width = rect.innerWidth+"px";
-		clonedEl.style.height = rect.innerHeight+"px";		
+		clonedEl.style.width = rect.width+"px";
+		clonedEl.style.height = rect.height+"px";		
 
 		clone.appendChild(clonedEl);						
 	});
@@ -92,7 +104,7 @@ function setupMultiClone(els, type) {
 
 	clone.style.position = "absolute";
 
-	return {clone, rect: {x, y, width: w, height: h}};
+	return {clone, rect: {left: x, top: y, width: w, height: h}};
 }
 
 function setupSingleClone(el, type) {
@@ -105,9 +117,12 @@ function setupSingleClone(el, type) {
 	if(pos !== "fixed" && pos !== "absolute") {
 		clone.style.position = "absolute";
 	}
+	else {
+		clone.style.position = pos;
+	}
 	
-	clone.style.width = originalRect.innerWidth+"px";
-	clone.style.height = originalRect.innerHeight+"px";
+	clone.style.width = originalRect.width+"px";
+	clone.style.height = originalRect.height+"px";
 			
 	return {clone, rect: originalRect};
 }	
@@ -117,10 +132,13 @@ function setupClone(draggables, config) {
 
 	const cloneObj = (draggables.length === 1) ? setupSingleClone(draggables[0], config.type) : setupMultiClone(draggables, config.type);	
 
+	const x = cloneObj.rect.left;
+	const y = cloneObj.rect.top;
+	
 	clone = cloneObj.clone;
 	clone.id = "cloneAnchor";
-	clone.style.left = cloneObj.rect.x+"px";
-	clone.style.top = cloneObj.rect.y+"px";		
+	clone.style.left = x+"px";
+	clone.style.top = y+"px";		
 	clone.style.pointerEvents = "none";	
 	clone.style.transition = "0s";
 	
@@ -128,13 +146,14 @@ function setupClone(draggables, config) {
 		clone.style["will-change"] = "transform";
 	}
 	
-	cloneStartX = cloneObj.rect.x;
-	cloneStartY = cloneObj.rect.y;		
+	cloneStartX = x;
+	cloneStartY = y;
 	
 	document.body.appendChild(clone);
 }
 
 export function destroyClone() {
+	//return
 	if(clone === null) {return;}
 
 	document.body.removeChild(clone);

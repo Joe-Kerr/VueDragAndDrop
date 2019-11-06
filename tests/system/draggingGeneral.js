@@ -194,3 +194,41 @@ test("clone has same dimension as element", async ()=>{
 		.release()
 		.perform();	
 });
+
+test("clone of draggable with padding, border, margin and scroll bars renders", async ()=>{
+	const {By} = testSuite;
+	
+	let elPos = await to.draggableWithStyle.getRect();
+	let clonePos;
+	const mx0 = elPos.x;
+	const my0 = elPos.y;	
+	const mxEnd = 400;
+	const myEnd = 300;	
+	
+	await driver.actions({async: true})
+		.move({x: mx0, y: my0}) 
+		.press()
+		.pause(1)
+		.perform();	
+	
+	const clone = await driver.findElement(By.id("cloneAnchor"));
+	clonePos = await clone.getRect();
+
+	assert.equal(elPos.x, clonePos.x);
+	assert.equal(elPos.y, clonePos.y);	
+	assert.equal(elPos.width, clonePos.width);
+	assert.equal(elPos.height, clonePos.height);	
+	
+	await driver.actions({async: true})	
+		.move({duration: 100, x: mxEnd, y: myEnd})
+		.pause(1)
+		.perform();	
+	
+	clonePos = await clone.getRect();	
+	assert.equal(clonePos.x, mxEnd);
+	assert.equal(clonePos.y, myEnd);	
+	
+	await driver.actions({async: true})		
+		.release()
+		.perform();	
+});

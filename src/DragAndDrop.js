@@ -1,3 +1,5 @@
+import {getRectAbs} from "./helpers.js";
+
 let dragging;
 
 const dragAndDropParameters = {
@@ -56,13 +58,7 @@ class DragAndDrop {
 	}
 	
 	_getRect(el) {
-		let originalRect = el.getBoundingClientRect();
-		const elPos = window.getComputedStyle(el).position;
-
-		const x = (elPos !== "fixed") ? originalRect.x+window.pageXOffset : originalRect.x;
-		const y = (elPos !== "fixed") ? originalRect.y+window.pageYOffset : originalRect.y;			
-		
-		return {x, y, width: originalRect.width, height: originalRect.height, position: elPos};
+		return getRectAbs(el);
 	}
 	
 	_setTempStyle() {
@@ -190,8 +186,8 @@ class DragAndDrop {
 		params.droppableEl = dom;
 		params.droppableData = data;
 		params.droppableType = config.droppableType;
-		params.droppableX = xy.x;
-		params.droppableY = xy.y;
+		params.droppableX = xy.left;
+		params.droppableY = xy.top;
 		params.endX = event.pageX;
 		params.endY = event.pageY;				
 	}	
@@ -210,8 +206,8 @@ class DragAndDrop {
 		params.draggableData = data;
 		params.draggableType = config.draggableType;
 		params.draggableEl = dom;
-		params.draggableX = xy.x;
-		params.draggableY = xy.y;
+		params.draggableX = xy.left;
+		params.draggableY = xy.top;
 		params.draggableNewX = params.draggableX;
 		params.draggableNewY = params.draggableY;
 

@@ -542,6 +542,79 @@ function dragAndDrop(store, subsystems) {
 }
 
 /* harmony default export */ var directive = (dragAndDrop);
+// CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/helpers.js
+var rectId = null;
+var rectCache = null;
+
+function pxToInt(px) {
+  if (px === "") {
+    return 0;
+  }
+
+  var intVal = parseInt(px.replace("px", ""));
+
+  if (isNaN(intVal)) {
+    throw new Error("Failed to parse pixel value");
+  }
+
+  return intVal;
+} //* General: https://developer.mozilla.org/en-US/docs/Web/API/CSS_Object_Model/Determining_the_dimensions_of_elements
+//			 https://docs.microsoft.com/en-us/previous-versions//hh781509(v=vs.85)
+//*box-sizing https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
+// "content-box": outer width = inner width + padding + border
+// "border-box": outer width = (inner width - padding - border) + padding + border
+//*style.width 
+// "inner width"
+//*clientWdith (https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth)
+// inner width + padding | 0 for inline/css-less
+//*offsetWdith (https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetWidth)
+// inner width + padding + border + scrollBar | 0 if hidden
+//*boundingRect
+// innerWidth + padding + margin + border + scrollBar
+
+
+function getRectAbs(el) {
+  if (rectId === el) {
+    return rectCache;
+  }
+
+  var rectData = {
+    position: "",
+    //layout box
+    outerX: 0,
+    outerY: 0,
+    outerWidth: 0,
+    outerHeight: 0,
+    //equiv to css vals
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0
+  };
+  var rect = el.getBoundingClientRect();
+  var cstyles = window.getComputedStyle(el);
+  var elPos = cstyles.position;
+  var borderH = pxToInt(cstyles.borderLeftWidth) + pxToInt(cstyles.borderRightWidth);
+  var borderV = pxToInt(cstyles.borderTopWidth) + pxToInt(cstyles.borderBottomWidth);
+  var paddingH = pxToInt(cstyles.paddingLeft) + pxToInt(cstyles.paddingRight);
+  var paddingV = pxToInt(cstyles.paddingTop) + pxToInt(cstyles.paddingBottom);
+  var marginLeft = pxToInt(cstyles.marginLeft);
+  var marginTop = pxToInt(cstyles.marginTop);
+  rectData.position = elPos;
+  rectData.outerX = elPos !== "fixed" ? rect.x + window.pageXOffset : rect.x;
+  rectData.outerY = elPos !== "fixed" ? rect.y + window.pageYOffset : rect.y;
+  rectData.left = rectData.outerX - marginLeft;
+  rectData.top = rectData.outerY - marginTop;
+  rectData.outerWidth = rect.width;
+  rectData.outerHeight = rect.height;
+  rectData.width = rect.outerWidth - borderH - paddingH;
+  ;
+  rectData.height = rect.outerHeight - borderV - paddingV;
+  console.log(rectData);
+  rectId = el;
+  rectCache = rectData;
+  return rectData;
+}
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/DragAndDrop.js
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -550,6 +623,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 
 var dragging;
 var dragAndDropParameters = {
@@ -588,7 +662,7 @@ var defaultDragging = function defaultDragging(_event) {
   dnd.draggableNewY = dnd.draggableY + deltaY;
 };
 
-var DragAndDrop =
+var DragAndDrop_DragAndDrop =
 /*#__PURE__*/
 function () {
   function DragAndDrop() {
@@ -608,17 +682,7 @@ function () {
   _createClass(DragAndDrop, [{
     key: "_getRect",
     value: function _getRect(el) {
-      var originalRect = el.getBoundingClientRect();
-      var elPos = window.getComputedStyle(el).position;
-      var x = elPos !== "fixed" ? originalRect.x + window.pageXOffset : originalRect.x;
-      var y = elPos !== "fixed" ? originalRect.y + window.pageYOffset : originalRect.y;
-      return {
-        x: x,
-        y: y,
-        width: originalRect.width,
-        height: originalRect.height,
-        position: elPos
-      };
+      return getRectAbs(el);
     }
   }, {
     key: "_setTempStyle",
@@ -763,8 +827,8 @@ function () {
       params.droppableEl = dom;
       params.droppableData = data;
       params.droppableType = config.droppableType;
-      params.droppableX = xy.x;
-      params.droppableY = xy.y;
+      params.droppableX = xy.left;
+      params.droppableY = xy.top;
       params.endX = event.pageX;
       params.endY = event.pageY;
     }
@@ -784,8 +848,8 @@ function () {
       params.draggableData = data;
       params.draggableType = config.draggableType;
       params.draggableEl = dom;
-      params.draggableX = xy.x;
-      params.draggableY = xy.y;
+      params.draggableX = xy.left;
+      params.draggableY = xy.top;
       params.draggableNewX = params.draggableX;
       params.draggableNewY = params.draggableY;
       params.draggableList = this._getDraggableList(el, config);
@@ -883,7 +947,7 @@ function () {
   return DragAndDrop;
 }();
 
-/* harmony default export */ var src_DragAndDrop = (DragAndDrop);
+/* harmony default export */ var src_DragAndDrop = (DragAndDrop_DragAndDrop);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/PubSub.js
 function PubSub_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -953,39 +1017,42 @@ PubSub.events = {
 };
 /* harmony default export */ var src_PubSub = (PubSub);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/cloneController.js
+
 var clone = null;
 var cloneStartX = null;
-var cloneStartY = null; // https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth = innerWidth+padding; 0 for inline/css-less
-// boundingRect = innerWidth + padding + margin + border + scrollBar
+var cloneStartY = null;
 
 function getRect(el) {
-  var originalRect = el.getBoundingClientRect();
-  var cstyles = window.getComputedStyle(el);
-  var elPos = cstyles.position;
-  var x = elPos !== "fixed" ? originalRect.x + window.pageXOffset : originalRect.x;
-  var y = elPos !== "fixed" ? originalRect.y + window.pageYOffset : originalRect.y;
-  var innerWidth = parseInt(cstyles.width.replace("px", ""));
-  var innerHeight = parseInt(cstyles.height.replace("px", ""));
-  return {
-    x: x,
-    y: y,
-    width: originalRect.width,
-    height: originalRect.height,
-    position: elPos,
-    innerWidth: innerWidth,
-    innerHeight: innerHeight
-  };
+  return getRectAbs(el);
 } // Not really carbon copy, see e.g. https://stackoverflow.com/questions/1848445/duplicating-an-element-and-its-style-with-javascript
 
 
 function createCopyClone(el) {
   var clone = el.cloneNode(true);
   var style = document.defaultView.getComputedStyle(el, null);
+  var directions = ["Top", "Left", "Bottom", "Right"];
+  var borderProps = ["Color", "Style", "Width"];
   clone.style.color = style.color;
   clone.style.backgroundColor = style.backgroundColor;
-  clone.style.border = style.border;
+
+  for (var i = 0, ii = directions.length; i < ii; i++) {
+    for (var j = 0, jj = borderProps.length; j < jj; j++) {
+      var key = "border" + directions[i] + borderProps[j];
+      clone.style[key] = style[key];
+    }
+  }
+
   clone.style.borderRadius = style.borderRadius;
-  clone.style.margin = "0px";
+  clone.style.marginTop = style.marginTop;
+  clone.style.marginRight = style.marginLeft;
+  clone.style.marginLeft = style.marginLeft;
+  clone.style.marginBottom = style.marginBottom;
+  clone.style.paddingTop = style.paddingTop;
+  clone.style.paddingRight = style.paddingLeft;
+  clone.style.paddingLeft = style.paddingLeft;
+  clone.style.paddingBottom = style.paddingBottom;
+  clone.style.overflow = style.overflow;
+  clone.style.boxSizing = style.boxSizing;
   clone.style.opacity = 0.6;
   return clone;
 }
@@ -1003,29 +1070,29 @@ function createABunchOfClones(els, type) {
   var clone = document.createElement("div");
   var initRect = getRect(els[0]);
   var postProcRects = [];
-  var top = initRect.y;
-  var left = initRect.x;
-  var bottom = top + initRect.height;
-  var right = left + initRect.width;
+  var top = initRect.outerY;
+  var left = initRect.outerX;
+  var bottom = top + initRect.outerHeight;
+  var right = left + initRect.outerWidth;
   els.forEach(function (el) {
     var rect = getRect(el);
 
-    if (rect.x < left) {
-      left = rect.x;
+    if (rect.outerX < left) {
+      left = rect.outerX;
     }
 
-    if (rect.y < top) {
-      top = rect.y;
+    if (rect.outerY < top) {
+      top = rect.outerY;
     }
 
-    if (rect.x + rect.width > right) {
-      right = rect.x + rect.width;
+    if (rect.outerX + rect.outerWidth > right) {
+      right = rect.outerX + rect.outerWidth;
     }
 
     ;
 
-    if (rect.y + rect.height > bottom) {
-      bottom = rect.y + rect.height;
+    if (rect.outerY + rect.outerHeight > bottom) {
+      bottom = rect.outerY + rect.outerHeight;
     }
 
     ;
@@ -1034,15 +1101,16 @@ function createABunchOfClones(els, type) {
   els.forEach(function (el, i) {
     var rect = postProcRects[i];
     var pos = rect.position;
-    var clonedEl = type === "copy" ? createCopyClone(el) : createCheapClone(el);
-    var x = rect.x + (pos === "fixed" ? window.pageXOffset : 0) - left;
-    var y = rect.y + (pos === "fixed" ? window.pageYOffset : 0) - top;
+    var clonedEl = type === "copy" ? createCopyClone(el) : createCheapClone(el); //el [+ fixedToAbsolute] - relativeToParent
+
+    var x = rect.left + (pos === "fixed" ? window.pageXOffset : 0) - left;
+    var y = rect.top + (pos === "fixed" ? window.pageYOffset : 0) - top;
     clonedEl.id = "cloned_" + clonedEl.id;
     clonedEl.style.position = "absolute";
     clonedEl.style.left = x + "px";
     clonedEl.style.top = y + "px";
-    clonedEl.style.width = rect.innerWidth + "px";
-    clonedEl.style.height = rect.innerHeight + "px";
+    clonedEl.style.width = rect.width + "px";
+    clonedEl.style.height = rect.height + "px";
     clone.appendChild(clonedEl);
   });
   return {
@@ -1065,8 +1133,8 @@ function setupMultiClone(els, type) {
   return {
     clone: clone,
     rect: {
-      x: x,
-      y: y,
+      left: x,
+      top: y,
       width: w,
       height: h
     }
@@ -1082,10 +1150,12 @@ function setupSingleClone(el, type) {
 
   if (pos !== "fixed" && pos !== "absolute") {
     clone.style.position = "absolute";
+  } else {
+    clone.style.position = pos;
   }
 
-  clone.style.width = originalRect.innerWidth + "px";
-  clone.style.height = originalRect.innerHeight + "px";
+  clone.style.width = originalRect.width + "px";
+  clone.style.height = originalRect.height + "px";
   return {
     clone: clone,
     rect: originalRect
@@ -1098,10 +1168,12 @@ function setupClone(draggables, config) {
   }
 
   var cloneObj = draggables.length === 1 ? setupSingleClone(draggables[0], config.type) : setupMultiClone(draggables, config.type);
+  var x = cloneObj.rect.left;
+  var y = cloneObj.rect.top;
   clone = cloneObj.clone;
   clone.id = "cloneAnchor";
-  clone.style.left = cloneObj.rect.x + "px";
-  clone.style.top = cloneObj.rect.y + "px";
+  clone.style.left = x + "px";
+  clone.style.top = y + "px";
   clone.style.pointerEvents = "none";
   clone.style.transition = "0s";
 
@@ -1109,12 +1181,13 @@ function setupClone(draggables, config) {
     clone.style["will-change"] = "transform";
   }
 
-  cloneStartX = cloneObj.rect.x;
-  cloneStartY = cloneObj.rect.y;
+  cloneStartX = x;
+  cloneStartY = y;
   document.body.appendChild(clone);
 }
 
 function destroyClone() {
+  //return
   if (clone === null) {
     return;
   }
