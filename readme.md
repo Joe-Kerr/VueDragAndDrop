@@ -241,6 +241,10 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.1.1
+- Fix: Removed typo in variable name that caused NaN width/height
+- Chg: Added unit test for coords/dims/css extraction which was not covered by system test
+
 ### 1.1.0
 - New: Dragging of multiple elements possible
 - New: Added delta values to drag and drop event data
