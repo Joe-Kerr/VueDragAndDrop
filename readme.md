@@ -241,6 +241,16 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.1.0
+- New: Dragging of multiple elements possible
+- New: Added delta values to drag and drop event data
+
+- Chg: Ensure callbacks parameter has proper interface
+- Chg: Improved internal callback handling for better extensibility
+
+- Fix: Params parameter now defaults to empty object instead of undefined
+- Fix: Draggable and clone coordinates/dimensions should be pixel perfect now
+
 ### 1.0.2
 - Fix: Drag callback replaced mousemove instead of being called by mousemove
 - Fix: Demo now displays draggable clone correctly
