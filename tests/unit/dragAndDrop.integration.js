@@ -44,6 +44,7 @@ function addElWithListener(dnd, type, options={}) {
 	const id = options.id || type;
 	const cbs = options.callbacks || callbacks();	
 	const el = defaultElement(id);
+	const data = options.data || {};
 	
 	document.body.appendChild(el);
 	
@@ -52,7 +53,7 @@ function addElWithListener(dnd, type, options={}) {
 	
 	cfg.mode = type;
 	cfg.type = options.type || (type === "draggable") ? "drag" : "drop";
-	sample.addEventListener(el, el, cfg, {}, cbs);		
+	sample.addEventListener(el, el, cfg, data, cbs);		
 	
 	return el;
 }
@@ -171,6 +172,35 @@ test("call to removeEventListener mid dragging prevents droppable mouseup callba
 	sample.removeEventListener("droppable", droppable1);
 	document.body.removeChild(draggable1);
 	document.body.removeChild(droppable1);	
+});
+
+test("if dragging aborted by removeEventListener, dragstop callback gets proper data parameters", async ()=>{
+	let params = null;
+	const callbackTest = (e,d)=>{params=Object.assign({},d);}
+	const cbs = callbacks();	
+	const dragstopAlways = cbs.getEvent("dragstopAlways");
+	
+	cbs.subscribe(dragstopAlways, callbackTest);
+	
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs, data: "unitTest"});	
+		
+	await trigger("mousedown", draggable1);	
+	
+	sample.removeEventListener("draggable", draggable1);
+
+	await trigger("mouseup", droppable1);		
+	
+	assert.notStrictEqual(params.endX, null);
+	assert.notStrictEqual(params.endY, null);	
+	assert.notStrictEqual(params.droppableX, null);
+	assert.notStrictEqual(params.droppableY, null);
+	assert.notStrictEqual(params.droppableEl, null);	
+	assert.strictEqual(params.droppableType, null);
+	
+	sample.removeEventListener("droppable", droppable1);
+	document.body.removeChild(draggable1);
+	document.body.removeChild(droppable1);		
 });
 
 //jsdom does not provide pageX/Y

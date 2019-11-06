@@ -160,6 +160,8 @@ class DragAndDrop {
 		this.droppables.splice(0, this.droppables.length);
 		this.processingDroppables = false;
 
+		config.droppableType = null;
+		this._writeDroppableParameters(dndParams, event.target, event, config, null);
 		callbacks.notify("dragstop", dndParams);
 	
 		this._reset();
