@@ -4,118 +4,10 @@
 
   cloneController.js
     √ createClone does nothing if type null
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
     √ createClone creates one DOM node as cloneAnchor (110ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
     √ createClone creates child DOM nodes of draggables parameter
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-    √ createClone sets willChange according to config (64ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
+    √ createClone sets willChange according to config (59ms)
     √ updateClone updates transform property of clone anchor
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
     √ destroyClone removes clone from DOM
 
   directive.js
@@ -128,150 +20,15 @@
     √ directive throws if an undefined event is received in the store callback
 
   dragAndDrop.js - Integration testing
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
     √ all adhoc event listeners cleaned up (160ms)
     √ all delegate event listeners cleaned up
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
     √ all droppable mouseup callbacks fire before evaluation function
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (319ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-    √ all callbacks fire with parameters (470ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-    √ optional custom dragstart callback fires (316ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-    √ optional custom drag callback fires (476ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
+    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (315ms)
+    √ all callbacks fire with parameters (469ms)
+    √ optional custom dragstart callback fires (315ms)
+    √ optional custom drag callback fires (465ms)
     √ optional custom dragstop callbacks fire when not over droppable (316ms)
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-{ position: '',
-  outerX: NaN,
-  outerY: NaN,
-  outerWidth: 0,
-  outerHeight: 0,
-  left: NaN,
-  top: NaN,
-  width: NaN,
-  height: NaN }
-    √ optional custom dragstop callbacks fire when over droppable (324ms)
+    √ optional custom dragstop callbacks fire when over droppable (322ms)
 
   dragAndDrop.js
     √ addEventListener calls config parser with config parameter
@@ -285,6 +42,11 @@
     √ removeEventListener removes draggable listener
     √ removeEventListener removes droppable listener
     √ removeEventListener throws if element parameter not found in listeners list
+
+  helpers.js
+    √ getRectAbs returns expected data object
+    √ getRectAbs extracts expected values from DOM node
+    √ getRectAbs throws for invalid pixel values
 
   index.js
     √ index.js provides expected exports
@@ -315,6 +77,6 @@
     √ actions.register throws for missing parameters
 
 
-  55 passing (3s)
+  58 passing (3s)
 
  MOCHA  Tests completed successfully

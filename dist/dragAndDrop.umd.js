@@ -607,10 +607,9 @@ function getRectAbs(el) {
   rectData.top = rectData.outerY - marginTop;
   rectData.outerWidth = rect.width;
   rectData.outerHeight = rect.height;
-  rectData.width = rect.outerWidth - borderH - paddingH;
+  rectData.width = rectData.outerWidth - borderH - paddingH;
   ;
-  rectData.height = rect.outerHeight - borderV - paddingV;
-  console.log(rectData);
+  rectData.height = rectData.outerHeight - borderV - paddingV;
   rectId = el;
   rectCache = rectData;
   return rectData;
