@@ -273,6 +273,12 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.0
+- New: Added hot drag&drop. Allows init drag and drop operation programmatically
+- Chg: Test report now also contains system test log
+- Fix: Droppable data parameters did not update if draggable listener got removed mid dragging
+
+
 ### 1.1.1
 - Fix: Removed typo in variable name that caused NaN width/height
 - Chg: Added unit test for coords/dims/css extraction which was not covered by system test
