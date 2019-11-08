@@ -164,11 +164,6 @@ const helper = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-var cloneController_namespaceObject = {};
-__webpack_require__.r(cloneController_namespaceObject);
-__webpack_require__.d(cloneController_namespaceObject, "destroyClone", function() { return destroyClone; });
-__webpack_require__.d(cloneController_namespaceObject, "updateClone", function() { return updateClone; });
-__webpack_require__.d(cloneController_namespaceObject, "createClone", function() { return createClone; });
 var getters_namespaceObject = {};
 __webpack_require__.r(getters_namespaceObject);
 __webpack_require__.d(getters_namespaceObject, "getArrayElWIdxByIdFactory", function() { return getArrayElWIdxByIdFactory; });
@@ -413,127 +408,23 @@ const cats4Vue = {
 
 /* harmony default export */ var src = (cats4Vue);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/directive.js
-var notifyStore;
-
-function getMode(arg) {
-  if (arg !== "draggable" && arg !== "droppable") {
-    throw new Error("Invalid directive argument. Use v-drag&drop:draggable|droppable. Got: " + arg);
-  }
-
-  return arg;
-}
-
-function getEl(el) {
+function mergeDirectiveOptions(arg) {
   var value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  if (value.selector === undefined) {
-    return el;
-  }
-
-  var newEl = document.getElementById(value.selector);
-
-  if (newEl === null) {
-    throw new Error("Directive option 'selector' (" + value.selector + ") did not return a DOM element.");
-  }
-
-  return newEl;
-}
-
-function getConfig(context, mode, vnode) {
-  var params = context.value || {};
-  var config = {
-    mode: mode,
-    type: params.type,
-    greedy: context.modifiers.greedy === true,
-    draggableOnly: context.modifiers.only === true,
-    multiDrag: params.multi !== undefined ? function () {
-      return vnode.context[params.multi];
-    } : null,
-    cloneType: params.cloneType !== undefined ? params.cloneType : "copy",
-    cloneWillChangeThreshold: params.cloneType !== undefined ? params.cloneWillChangeThreshold : 0
-  };
-  return config;
-}
-
-function getCallbacks() {
-  var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var config = arguments.length > 1 ? arguments[1] : undefined;
-  var subsystems = arguments.length > 2 ? arguments[2] : undefined;
-  var callbacks = new subsystems.PubSub();
-  var cloneController = subsystems.cloneController;
-
-  if (!config.draggableOnly) {
-    callbacks.subscribe("dragstart", storeCallback);
-    callbacks.subscribe("droppingOver", storeCallback);
-    callbacks.subscribe("dragstop", storeCallback);
-  }
-
-  callbacks.subscribe("dragstart", function createCloneAdapter(event, data) {
-    cloneController.createClone(data.draggableList, {
-      type: config.cloneType,
-      willChange: config.cloneWillChangeThreshold
-    });
-  });
-  callbacks.subscribe("dragmove", function createCloneAdapter(event, data) {
-    cloneController.updateClone(data);
-  });
-  callbacks.subscribe("dragstop", cloneController.destroyClone);
-
-  if (typeof params.drag === "function") {
-    callbacks.subscribe("dragmove", params.drag);
-  }
-
-  if (typeof params.dragstop === "function") {
-    callbacks.subscribe("droppedAll", params.dragstop);
-  }
-
-  if (typeof params.dragstart === "function") {
-    callbacks.subscribe("dragstart", params.dragstart);
-  }
-
-  return callbacks;
-}
-
-function getData() {
-  var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  return value.data || {};
-}
-
-function storeCallback(event, data) {
-  var map = {
-    dragstart: "draggable",
-    droppingOver: "droppable",
-    dragstop: "done"
-  };
-  var command = map[event];
-
-  if (command === undefined) {
-    throw new Error("Received undefined event in draggable or droppable callback: " + event);
-  }
-
-  notifyStore(command, data);
+  var mods = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  //context.arg = v-dir:arg
+  //context.value = v-dir="value"
+  //context.modifiers = v-dir.mod1.mod2...
+  var options = Object.assign({}, value, mods);
+  options.mode = arg;
+  return options;
 }
 
 function dragAndDrop(store, subsystems) {
-  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var dragAndDrop = new subsystems.DragAndDrop();
-  var namespace = options.namespace;
-
-  notifyStore = function notifyStore(action, data) {
-    store.dispatch(namespace + "/" + action, data);
-  }; //context.arg = v-dir:arg
-  //context.value = v-dir="value"
-  //context.modifiers = v-dir.mod1.mod2...
-
-
+  var dragAndDrop = subsystems.dragAndDropInstance;
   return {
     inserted: function inserted(el, context, vnode) {
-      var mode = getMode(context.arg);
-      var data = getData(context.value);
-      var elMoving = getEl(el, context.value);
-      var config = getConfig(context, mode, vnode);
-      var callbacks = getCallbacks(context.value, config, subsystems);
-      dragAndDrop.addEventListener(el, elMoving, config, data, callbacks);
+      var config = subsystems.preprocessDirectiveConfig(el, mergeDirectiveOptions(context.arg, context.value, context.modifiers), vnode);
+      dragAndDrop.addEventListener(el, config.elMoving, config, config.data, config.callbacks);
     },
     unbind: function unbind(el, context, vnode) {
       dragAndDrop.removeEventListener(context.arg, el);
@@ -743,7 +634,7 @@ function () {
       }
 
       if (config.type === undefined && config.greedy === false && config.draggableOnly === false) {
-        throw new Error("Directive requires 'type' value unless modifiers draggable.only OR droppable.greedy are given.");
+        throw new Error("Drag or drop requires 'type' value unless modifiers draggable.only OR droppable.greedy are given.");
       }
 
       var isDraggable = config.mode === "draggable";
@@ -795,6 +686,10 @@ function () {
 
       this.droppables.splice(0, this.droppables.length);
       this.processingDroppables = false;
+      config.droppableType = null;
+
+      this._writeDroppableParameters(dndParams, event.target, event, config, null);
+
       callbacks.notify("dragstop", dndParams);
 
       this._reset();
@@ -881,6 +776,29 @@ function () {
 
       document.addEventListener("mousemove", dragging);
       callbacks.notify("dragstart", dragAndDropParameters);
+    }
+  }, {
+    key: "hotDND",
+    value: function hotDND(el, config, data, event, callbacks) {
+      this._parseConfig(config);
+
+      var mode = config.mode;
+
+      if (mode === "draggable") {
+        if (this.isDragging === true) {
+          throw new Error("Tried to init another direct drag operation while one is aleady running.");
+        }
+
+        this._verifyCallbacks(callbacks);
+
+        this._mousedown(el, event, config, data, callbacks);
+      } else if (mode === "droppable") {
+        if (this.isDragging === false) {
+          throw new Error("Tried to init a direct drop operation but a drag operation did not precede.");
+        }
+
+        this._mouseup(el, event, config, data);
+      }
     }
   }, {
     key: "addEventListener",
@@ -1205,6 +1123,150 @@ function updateClone(data) {
 }
 function createClone(draggables, config) {
   setupClone(draggables, config);
+}
+// CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/configPreprocessor.js
+function configPreprocessor_typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { configPreprocessor_typeof = function _typeof(obj) { return typeof obj; }; } else { configPreprocessor_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return configPreprocessor_typeof(obj); }
+
+
+
+var vuexNotificator = null;
+
+function getMode(mode) {
+  if (mode !== "draggable" && mode !== "droppable") {
+    throw new Error("Invalid directive mode. Use v-drag&drop:draggable|droppable. Got: " + mode);
+  }
+
+  return mode;
+}
+
+function getEl(selector) {
+  var newEl = document.getElementById(selector);
+
+  if (newEl === null) {
+    throw new Error("Directive option 'selector' (" + selector + ") did not return a DOM element.");
+  }
+
+  return newEl;
+} //https://stackoverflow.com/a/384380/5250495
+
+
+function verifyDOMEl(o) {
+  if ((typeof HTMLElement === "undefined" ? "undefined" : configPreprocessor_typeof(HTMLElement)) === "object" ? o instanceof HTMLElement : //DOM2
+  o && configPreprocessor_typeof(o) === "object" && o !== null && o.nodeType === 1 && typeof o.nodeName === "string") {
+    return;
+  }
+
+  throw new Error("The element provided is not an HTML element.");
+}
+
+function storeCallback(event, data) {
+  var map = {
+    dragstart: "draggable",
+    droppingOver: "droppable",
+    dragstop: "done"
+  };
+  var command = map[event];
+
+  if (command === undefined) {
+    throw new Error("Received undefined event in draggable or droppable store callback: " + event);
+  }
+
+  vuexNotificator(command, data);
+}
+
+function setupCallbacks(config, userCallbacks) {
+  var callbacks = new src_PubSub();
+
+  if (!config.draggableOnly) {
+    callbacks.subscribe("dragstart", storeCallback);
+    callbacks.subscribe("droppingOver", storeCallback);
+    callbacks.subscribe("dragstop", storeCallback);
+  }
+
+  if (config.cloneType !== null) {
+    callbacks.subscribe("dragstart", function createCloneAdapter(event, data) {
+      createClone(data.draggableList, {
+        type: config.cloneType,
+        willChange: config.cloneWillChangeThreshold
+      });
+    });
+    callbacks.subscribe("dragmove", function createCloneAdapter(event, data) {
+      updateClone(data);
+    });
+    callbacks.subscribe("dragstop", destroyClone);
+  }
+
+  if (typeof userCallbacks.drag === "function") {
+    console.error("DEPRECATED: use 'dragmove' instead of 'drag' as a drag and drop config property.");
+    callbacks.subscribe("dragmove", userCallbacks.drag);
+  }
+
+  if (typeof userCallbacks.dragmove === "function") {
+    callbacks.subscribe("dragmove", userCallbacks.dragmove);
+  }
+
+  if (typeof userCallbacks.dragstop === "function") {
+    callbacks.subscribe("droppedAll", userCallbacks.dragstop);
+  }
+
+  if (typeof userCallbacks.dragstart === "function") {
+    callbacks.subscribe("dragstart", userCallbacks.dragstart);
+  }
+
+  return callbacks;
+}
+
+function preprocessConfig() {
+  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var vnode = arguments.length > 1 ? arguments[1] : undefined;
+
+  if (vuexNotificator === null) {
+    throw new Error("Tried to init a drag or drop operation but the plugin has not been installed yet.");
+  }
+
+  var config = {
+    mode: getMode(options.mode),
+    greedy: options.greedy === true,
+    draggableOnly: options.only === true,
+    type: options.type,
+    elMoving: options.selector === undefined ? null : getEl(options.selector),
+    data: options.data || {},
+    multiDrag: options.multi !== undefined ? function () {
+      return vnode.context[options.multi];
+    } : null,
+    cloneType: options.cloneType !== undefined ? options.cloneType : "copy",
+    cloneWillChangeThreshold: options.cloneType !== undefined ? options.cloneWillChangeThreshold : 0
+  };
+  return config;
+}
+
+function preprocessMixinConfig(el, options, vnode) {
+  verifyDOMEl(el);
+  var config = preprocessConfig(options, vnode);
+  config.callbacks = setupCallbacks(config, options);
+  return config;
+}
+function preprocessDirectiveConfig(el, mergedDirectiveOptions, vnode) {
+  var config = preprocessConfig(mergedDirectiveOptions, vnode);
+  config.callbacks = setupCallbacks(config, mergedDirectiveOptions);
+
+  if (config.elMoving === null) {
+    config.elMoving = el;
+  }
+
+  return config;
+}
+function registerVuexInstance(vuex, namespace) {
+  var reset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+  if (reset === true) {
+    vuexNotificator = null;
+    return;
+  }
+
+  vuexNotificator = function vuexNotificator(action, data) {
+    vuex.dispatch(namespace + "/" + action, data);
+  };
 }
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/node_modules/vuex-heman/src/getters.js
 const {helper} = __webpack_require__("63e8");
@@ -1873,7 +1935,7 @@ function store_typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.i
 
 
 
-
+var dragAndDropInstance = new src_DragAndDrop();
 
 function parseConfig() {
   var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -1893,25 +1955,31 @@ function parseConfig() {
   return cats4Vue.configParser(config, defaults);
 }
 
+var hotDNDMixin = {
+  methods: {
+    hotDND: function hotDND(el, options, event) {
+      var config = preprocessMixinConfig(el, options, this);
+      dragAndDropInstance.hotDND(el, config, config.data, event, config.callbacks);
+    }
+  }
+};
 var installer = {
   install: function install(Vue, config) {
     var options = parseConfig(config);
     var namespace = options.namespace;
     var vuex = config.vuex;
     cats4Vue.registerVuexModule(vuex, namespace, src_store);
+    registerVuexInstance(vuex, namespace);
     var subsystems = {
-      DragAndDrop: src_DragAndDrop,
-      PubSub: src_PubSub,
-      cloneController: cloneController_namespaceObject
+      dragAndDropInstance: dragAndDropInstance,
+      preprocessDirectiveConfig: preprocessDirectiveConfig
     };
-    Vue.directive(options.directive, directive(vuex, subsystems, {
-      namespace: namespace,
-      delegateEvents: options.delegateEvents
-    }));
+    Vue.directive(options.directive, directive(vuex, subsystems));
   }
 };
 /* harmony default export */ var dragAndDrop_src = (installer);
 // CONCATENATED MODULE: ./node_modules/@vue/cli-service/lib/commands/build/entry-lib.js
+/* concated harmony reexport hotDNDMixin */__webpack_require__.d(__webpack_exports__, "hotDNDMixin", function() { return hotDNDMixin; });
 /* concated harmony reexport installer */__webpack_require__.d(__webpack_exports__, "installer", function() { return installer; });
 
 

@@ -18,6 +18,7 @@ Example: given a collection of images and whenever an image is dragged over:
 - Make arbitrary elements drop listeners (droppables)
 - Same draggable can behave differently for specific droppabbles
 - Minimally invasive: doesn't touch Vue-owned DOM, doesn't prevent or stop events
+- Use as Vue directive or by [hot drag&drop](#hot-drag-and-drop) via Mixin
 
 
 ## Overview
@@ -129,7 +130,7 @@ Overrides the draggable element with the selector (html id). Can be used for a d
 
 Arbitrary user data which will be provided to the final drag and drop action.
 
-### drag< function >
+### dragmove< function >, drag< function > (deprecated)
 
 Override the mousemove callback, i.e. mouse movement while dragging.
 
@@ -186,6 +187,37 @@ this.$store.dispatch("drag&drop/register", {dragType: "file", dropType: "trash",
 ```
 
 Whenever an element of type "file" is dropped over an element with type "trash", the store action "deleteFile" is called. The "deleteFile" action is one that you have defined in your store. It gets as data parameter various [drag and drop information](#event-information).
+
+
+### Hot drag and drop (Mixin)
+
+Hot drag and drop gives you direct access to init a drag or drop operation. This way you can programmically init drag and drop without needing a nodes's mousedown/mouseup event. 
+
+Hot D&D is installed per component via mixin.
+
+```javascript
+import {hotDNDMixin} from "@joe_kerr/vue-drag-and-drop";
+
+export default {
+	name: "some-component",
+	mixins: [hotDNDMixin],
+	
+	//injects the following:
+	methods: {
+		hotDND(el, options, event) {...}
+	}
+}
+```
+
+**methods.hotDND(el< DOM node >, options< object >[, event< MouseEvenet >])**
+
+- el: The DOM element that is the draggable or droppable.
+
+- options: Same as [directive options](#directive-options) and [directive modifiers](#directive-modifiers)
+
+- options.mode< string >: Additioally, "draggable" or "droppable" must be provided.
+
+- event: Only needed for a draggable and is usually a MouseEvent. Currently, pageX and pageY are required.
 
 
 ### Event information

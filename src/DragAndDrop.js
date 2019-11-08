@@ -113,7 +113,7 @@ class DragAndDrop {
 		}		
 		
 		if(config.type === undefined && (config.greedy === false && config.draggableOnly === false)) {
-			throw new Error("Directive requires 'type' value unless modifiers draggable.only OR droppable.greedy are given.");
+			throw new Error("Drag or drop requires 'type' value unless modifiers draggable.only OR droppable.greedy are given.");
 		}	
 				
 		const isDraggable = (config.mode === "draggable");		
@@ -236,6 +236,27 @@ class DragAndDrop {
 		callbacks.notify("dragstart", dragAndDropParameters);
 	}
 
+	hotDND(el, config, data, event, callbacks) {
+		this._parseConfig(config);		
+		
+		const mode = config.mode;		
+		
+		if(mode === "draggable") {
+			if(this.isDragging === true) {
+				throw new Error("Tried to init another direct drag operation while one is aleady running.");
+			}			
+			this._verifyCallbacks(callbacks);
+			this._mousedown(el, event, config, data, callbacks);
+		}
+		
+		else if(mode === "droppable") {
+			if(this.isDragging === false) {
+				throw new Error("Tried to init a direct drop operation but a drag operation did not precede.");
+			}			
+			this._mouseup(el, event, config, data);
+		}
+	}
+	
 	addEventListener(elSource, elMoving, config, data, callbacks) {
 		this._parseConfig(config);
 		this._verifyCallbacks(callbacks);

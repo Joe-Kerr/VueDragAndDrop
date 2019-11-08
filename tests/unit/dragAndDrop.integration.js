@@ -359,3 +359,73 @@ test("optional custom dragstop callbacks fire when over droppable", async ()=>{
 	document.body.removeChild(draggable1);
 	document.body.removeChild(droppable1);	
 });
+
+test("hotDND drag interops with droppable listeners", async ()=>{
+	const droppable = addElWithListener(sample, "droppable", {type: "normalDrop"});
+	const hotDraggable = defaultElement("hotDraggable");	
+	const config = {mode: "draggable", type: "hotDrag"}
+	const data = "interop";
+	const event = {pageX: 1, pageY: 2};
+	const cbs = callbacks();
+	
+	const dragstart = new sinon.fake();	
+	const drag = new sinon.fake();	
+	const dragstopOn = new sinon.fake();
+	const dragstopAfter = new sinon.fake();
+	const dragstopAlways = new sinon.fake();	
+	
+	cbs.subscribe(cbs.getEvent("dragstart"), dragstart);
+	cbs.subscribe(cbs.getEvent("dragmove"), drag);		
+	cbs.subscribe(cbs.getEvent("dragstopOnDroppable"), dragstopOn);		
+	cbs.subscribe(cbs.getEvent("dragstopAfterAllDroppables"), dragstopAfter);		
+	cbs.subscribe(cbs.getEvent("dragstopAlways"), dragstopAlways);	
+	
+	sample.hotDND(hotDraggable, config, data, event, cbs);
+	await trigger("mousemove");
+	await trigger("mouseup", droppable);
+	
+	assert.equal(dragstart.callCount, 1);
+	assert.equal(drag.callCount, 1);
+	assert.equal(dragstopOn.callCount, 1);
+	assert.equal(dragstopAfter.callCount, 1);
+	assert.equal(dragstopAlways.callCount, 1);
+	
+	sample.removeEventListener("droppable", droppable);
+	document.body.removeChild(droppable);		
+});
+
+test("hotDND drop interops with draggable listeners", async ()=>{
+	const hotDroppable = defaultElement("hotDroppable");	
+	const config = {mode: "droppable", type: "hotDrop"}
+	const data = "interop";
+	const event = {pageX: 1, pageY: 2};
+	const cbs = callbacks();
+	
+	const dragstart = new sinon.fake();	
+	const drag = new sinon.fake();	
+	const dragstopOn = new sinon.fake();
+	const dragstopAfter = new sinon.fake();
+	const dragstopAlways = new sinon.fake();	
+	
+	cbs.subscribe(cbs.getEvent("dragstart"), dragstart);
+	cbs.subscribe(cbs.getEvent("dragmove"), drag);		
+	cbs.subscribe(cbs.getEvent("dragstopOnDroppable"), dragstopOn);		
+	cbs.subscribe(cbs.getEvent("dragstopAfterAllDroppables"), dragstopAfter);		
+	cbs.subscribe(cbs.getEvent("dragstopAlways"), dragstopAlways);	
+	
+	const draggable = addElWithListener(sample, "draggable", {type: "normalDrag", callbacks: cbs});
+		
+	await trigger("mousedown", draggable);		
+	await trigger("mousemove");
+	sample.hotDND(hotDroppable, config, data, event, null);
+	await trigger("mouseup");
+	
+	assert.equal(dragstart.callCount, 1);
+	assert.equal(drag.callCount, 1);
+	assert.equal(dragstopOn.callCount, 1);
+	assert.equal(dragstopAfter.callCount, 1);
+	assert.equal(dragstopAlways.callCount, 1);
+	
+	sample.removeEventListener("draggable", draggable);
+	document.body.removeChild(draggable);	
+});

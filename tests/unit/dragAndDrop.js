@@ -13,6 +13,100 @@ function createFakeEl() {
 
 const fakeCallbacks = {notify: ()=>{}};
 
+test("hotDND calls setup functions with expected parameters", ()=>{
+	const config = {};
+	const callbacks = {};
+	const sample = new Sample();
+	sample._parseConfig = new sinon.fake();
+	sample._verifyCallbacks = new sinon.fake();
+	sample._mousedown = ()=>{};
+	sample._mouseup = ()=>{};
+	
+	config.mode = "draggable";
+	sample.hotDND(null, config, null, null, callbacks);
+	assert.equal(sample._parseConfig.callCount, 1);
+	assert.equal(sample._parseConfig.lastCall.args[0], config);
+	assert.equal(sample._verifyCallbacks.callCount, 1);
+	assert.equal(sample._verifyCallbacks.lastCall.args[0], callbacks);
+	
+	sample.isDragging = true;
+	config.mode = "droppable";
+	sample.hotDND(null, config, null, null, callbacks);	
+	assert.equal(sample._parseConfig.callCount, 2);
+	assert.equal(sample._parseConfig.lastCall.args[0], config);
+	assert.equal(sample._verifyCallbacks.callCount, 1);	
+});
+
+test("hotDND inits drag operation with expected parameters", ()=>{
+	const draggable = {};
+	const config = {mode: "draggable"};
+	const data = {};
+	const event = {};
+	const callbacks = {};
+	const sample = new Sample();
+	sample._parseConfig = ()=>{};
+	sample._verifyCallbacks = ()=>{};	
+	sample._mousedown = new sinon.fake();
+	
+	sample.hotDND(draggable, config, data, event, callbacks);
+	
+	assert.equal(sample._mousedown.callCount, 1);
+	assert.equal(sample._mousedown.lastCall.args[0], draggable);
+	assert.equal(sample._mousedown.lastCall.args[1], event);
+	assert.equal(sample._mousedown.lastCall.args[2], config);
+	assert.equal(sample._mousedown.lastCall.args[3], data);	
+	assert.equal(sample._mousedown.lastCall.args[4], callbacks);
+});
+
+test("hotDND inits drop operation with expected parameters", ()=>{
+	const droppable = {};
+	const config = {mode: "droppable"};
+	const data = {};
+	const event = {};
+	const sample = new Sample();
+	sample._parseConfig = ()=>{};
+	sample._verifyCallbacks = ()=>{};	
+	sample._mouseup = new sinon.fake();
+	sample.isDragging = true;
+	
+	sample.hotDND(droppable, config, data, event, null);
+	
+	assert.equal(sample._mouseup.callCount, 1);
+	assert.equal(sample._mouseup.lastCall.args[0], droppable);
+	assert.equal(sample._mouseup.lastCall.args[1], event);
+	assert.equal(sample._mouseup.lastCall.args[2], config);
+	assert.equal(sample._mouseup.lastCall.args[3], data);	
+});
+
+test("hotDND throws if a drag operation is started while another one is not finished", ()=>{
+	const config = {mode: "draggable"};
+	const sample = new Sample();
+	sample._parseConfig = ()=>{};
+	sample._verifyCallbacks = ()=>{};	
+	sample._mousedown = ()=>{};
+	
+	sample.isDragging = true;
+	assert.throws(()=>{ sample.hotDND(null, config, null, null, null); }, {message: /init another direct drag operation while/});
+	
+	sample.isDragging = false;
+	assert.doesNotThrow(()=>{ sample.hotDND(null, config, null, null, null); });
+});
+
+test("hotDND throws if a drop operation is started while a drag operation did not precede", ()=>{
+	const config = {mode: "droppable"};
+	const sample = new Sample();
+	sample._parseConfig = ()=>{};
+	sample._verifyCallbacks = ()=>{};	
+	sample._mouseup = ()=>{};
+	
+	sample.isDragging = false;
+	assert.throws(()=>{ sample.hotDND(null, config, null, null, null); }, {message: /init a direct drop operation but/});
+	
+	sample.isDragging = true;
+	assert.doesNotThrow(()=>{ sample.hotDND(null, config, null, null, null); });	
+});
+
+
 test("addEventListener calls config parser with config parameter", ()=>{
 	const sample = new Sample();
 	const el = createFakeEl();
