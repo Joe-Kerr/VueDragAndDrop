@@ -1,36 +1,55 @@
+Unit test report 
+
  MOCHA  Testing...
 
 
 
   cloneController.js
     √ createClone does nothing if type null
-    √ createClone creates one DOM node as cloneAnchor (110ms)
+    √ createClone creates one DOM node as cloneAnchor 
     √ createClone creates child DOM nodes of draggables parameter
-    √ createClone sets willChange according to config (59ms)
+    √ createClone sets willChange according to config 
     √ updateClone updates transform property of clone anchor
     √ destroyClone removes clone from DOM
+
+  configPreprocessor.js
+    √ preprocessors return expected default config
+    √ preprocessors return expected config when changed by user
+    √ preprocessors skip store callbacks if draggableOnly
+    √ preprocessors skip clone callbacks if cloneType null
+    √ preprocessMixinConfig throws if draggable element is not an HTML element
+    √ preprocessors throw if arg is not 'draggable' / 'droppable'
+    √ preprocessors throw if the selector option does not return DOM element
+    √ preprocessors throw if an undefined event is received in the store callback
+    √ preprocessors throw if Vuex has not been registered
+    √ registerVuexInstance sets connection to vuex dispatch
 
   directive.js
     √ directive returns install function
     √ directive installer returns object with properties inserted and unbind
     √ inserted calls dragAndDrop with correct parameters
     √ unbind calls dragAndDrop with correct parameters
-    √ directive throws if arg is not 'draggable' / 'droppable'
-    √ directive throws if the selector option does not return DOM element
-    √ directive throws if an undefined event is received in the store callback
 
   dragAndDrop.js - Integration testing
-    √ all adhoc event listeners cleaned up (160ms)
+    √ all adhoc event listeners cleaned up 
     √ all delegate event listeners cleaned up
     √ all droppable mouseup callbacks fire before evaluation function
-    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks (315ms)
-    √ all callbacks fire with parameters (469ms)
-    √ optional custom dragstart callback fires (315ms)
-    √ optional custom drag callback fires (465ms)
-    √ optional custom dragstop callbacks fire when not over droppable (316ms)
-    √ optional custom dragstop callbacks fire when over droppable (322ms)
+    √ call to removeEventListener mid dragging prevents droppable mouseup callbacks 
+    √ if dragging aborted by removeEventListener, dragstop callback gets proper data parameters 
+    √ all callbacks fire with parameters 
+    √ optional custom dragstart callback fires 
+    √ optional custom drag callback fires 
+    √ optional custom dragstop callbacks fire when not over droppable 
+    √ optional custom dragstop callbacks fire when over droppable 
+    √ hotDND drag interops with droppable listeners 
+    √ hotDND drop interops with draggable listeners 
 
   dragAndDrop.js
+    √ hotDND calls setup functions with expected parameters
+    √ hotDND inits drag operation with expected parameters
+    √ hotDND inits drop operation with expected parameters
+    √ hotDND throws if a drag operation is started while another one is not finished
+    √ hotDND throws if a drop operation is started while a drag operation did not precede
     √ addEventListener calls config parser with config parameter
     √ addEventListener stores draggable listener information
     √ addEventListener adds draggable event listener
@@ -50,6 +69,7 @@
 
   index.js
     √ index.js provides expected exports
+    √ hotDNDMixin returns Vue method mixin
     √ installer calls all utility functions
     √ installer registers store with correct namespace
     √ installer registers directive with correct name
@@ -76,7 +96,44 @@
     √ actions.done resets state
     √ actions.register throws for missing parameters
 
+  Vue directive and mixin integration
+    √ Get response from directive 
+    √ Get response from mixin 
 
-  58 passing (3s)
+
+  76 passing 
 
  MOCHA  Tests completed successfully
+
+
+System test report 
+
+
+
+  Drag and drop
+    √ draggable over matching droppable fires 
+    √ draggable over non-matching droppable doesn't fire 
+    √ draggable over two matching droppables fires twice 
+    √ draggable over two droppables where first matches fires for first 
+    √ draggable over two droppables where second matches fires for second 
+    √ draggable over two matching droppables where first is greedy fires for first 
+    √ draggable over obstructing child of matching droppable fires 
+    √ draggable without droppable fires dragstop / doesn't fire for droppables 
+    √ draggable that is also droppable doesn't fire for itself 
+
+  Dragging general
+    √ fixed draggable can be dragged when viewport not at origin 
+    √ absolute draggable can be dragged when viewport not at origin 
+    √ clone of fixed draggable renders before mousemove when viewport not at origin 
+    √ clone of aboslute draggable renders before mousemove when viewport not at origin 
+    √ clone has same dimension as element 
+    √ clone of draggable with padding, border, margin and scroll bars renders 
+
+  Multi dragging
+    √ subset of fixed and absolute draggables can be dragged when viewport not at origin 
+    √ clones of fixed and absolute draggable subset render before mousemove when viewport not at origin 
+    √ clone anchor has origin at top-left-most draggable 
+
+
+  18 passing 
+
