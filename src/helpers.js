@@ -1,6 +1,3 @@
-let rectId = null;
-let rectCache = null;
-
 function pxToInt(px) {
 	if(px === "") {return 0;}
 	
@@ -33,10 +30,6 @@ function pxToInt(px) {
 // innerWidth + padding + margin + border + scrollBar
 
 export function getRectAbs(el) {
-	if(rectId === el) {
-		return rectCache;
-	}
-	
 	const rectData = {
 		position: "",
 				
@@ -105,8 +98,6 @@ export function getRectAbs(el) {
 	rectData.width = rectData.outerWidth - borderH - paddingH;;
 	rectData.height = rectData.outerHeight - borderV - paddingV;		
 	//
-	rectId = el;
-	rectCache = rectData;
 	
 	return rectData;	
 }
