@@ -39,7 +39,7 @@ export function getRectAbs(el) {
 	
 	const rectData = {
 		position: "",
-		
+				
 		//layout box
 		outerX: 0,
 		outerY: 0,
@@ -50,7 +50,23 @@ export function getRectAbs(el) {
 		left: 0,
 		top: 0,
 		width: 0,
-		height: 0
+		height: 0,
+		
+		//absolute page (absolute) or viewport (fixed) position minus marginLeft/Top
+		absX: 0,
+		absY: 0,
+		
+		//absolute dimensions including padding, border
+		outerWidth: 0,
+		outerHeight: 0,
+			
+		//position within containing parent minus marginTop/Left
+		offsetX: 0,
+		offsetY: 0,
+		
+		//equivalent to css width
+		width: 0,
+		height: 0,		
 	};	
 	
 	const rect = el.getBoundingClientRect();
@@ -76,7 +92,19 @@ export function getRectAbs(el) {
 	rectData.outerHeight = rect.height;
 	rectData.width = rectData.outerWidth - borderH - paddingH;;
 	rectData.height = rectData.outerHeight - borderV - paddingV;	
+	//
+	rectData.absX = ((elPos !== "fixed") ? rect.x+window.pageXOffset : rect.x) - marginLeft;
+	rectData.absY = ((elPos !== "fixed") ? rect.y+window.pageYOffset : rect.y) - marginTop;
 	
+	rectData.offsetX = el.offsetLeft;
+	rectData.offsetY = el.offsetTop;
+	
+	rectData.outerWidth = rect.width;
+	rectData.outerHeight = rect.height;
+	
+	rectData.width = rectData.outerWidth - borderH - paddingH;;
+	rectData.height = rectData.outerHeight - borderV - paddingV;		
+	//
 	rectId = el;
 	rectCache = rectData;
 	

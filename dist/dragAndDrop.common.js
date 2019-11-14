@@ -425,6 +425,8 @@ function dragAndDrop(store, subsystems) {
 
 /* harmony default export */ var directive = (dragAndDrop);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/helpers.js
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var rectId = null;
 var rectCache = null;
 
@@ -456,11 +458,13 @@ function pxToInt(px) {
 
 
 function getRectAbs(el) {
+  var _rectData;
+
   if (rectId === el) {
     return rectCache;
   }
 
-  var rectData = {
+  var rectData = (_rectData = {
     position: "",
     //layout box
     outerX: 0,
@@ -471,8 +475,11 @@ function getRectAbs(el) {
     left: 0,
     top: 0,
     width: 0,
-    height: 0
-  };
+    height: 0,
+    //absolute page (absolute) or viewport (fixed) position minus marginLeft/Top
+    absX: 0,
+    absY: 0
+  }, _defineProperty(_rectData, "outerWidth", 0), _defineProperty(_rectData, "outerHeight", 0), _defineProperty(_rectData, "offsetX", 0), _defineProperty(_rectData, "offsetY", 0), _defineProperty(_rectData, "width", 0), _defineProperty(_rectData, "height", 0), _rectData);
   var rect = el.getBoundingClientRect();
   var cstyles = window.getComputedStyle(el);
   var elPos = cstyles.position;
@@ -491,7 +498,18 @@ function getRectAbs(el) {
   rectData.outerHeight = rect.height;
   rectData.width = rectData.outerWidth - borderH - paddingH;
   ;
-  rectData.height = rectData.outerHeight - borderV - paddingV;
+  rectData.height = rectData.outerHeight - borderV - paddingV; //
+
+  rectData.absX = (elPos !== "fixed" ? rect.x + window.pageXOffset : rect.x) - marginLeft;
+  rectData.absY = (elPos !== "fixed" ? rect.y + window.pageYOffset : rect.y) - marginTop;
+  rectData.offsetX = el.offsetLeft;
+  rectData.offsetY = el.offsetTop;
+  rectData.outerWidth = rect.width;
+  rectData.outerHeight = rect.height;
+  rectData.width = rectData.outerWidth - borderH - paddingH;
+  ;
+  rectData.height = rectData.outerHeight - borderV - paddingV; //
+
   rectId = el;
   rectCache = rectData;
   return rectData;
@@ -712,8 +730,8 @@ function () {
       params.droppableEl = dom;
       params.droppableData = data;
       params.droppableType = config.droppableType;
-      params.droppableX = xy.left;
-      params.droppableY = xy.top;
+      params.droppableX = xy.offsetX;
+      params.droppableY = xy.offsetY;
       params.endX = event.pageX;
       params.endY = event.pageY;
     }
@@ -733,8 +751,8 @@ function () {
       params.draggableData = data;
       params.draggableType = config.draggableType;
       params.draggableEl = dom;
-      params.draggableX = xy.left;
-      params.draggableY = xy.top;
+      params.draggableX = xy.offsetX;
+      params.draggableY = xy.offsetY;
       params.draggableNewX = params.draggableX;
       params.draggableNewY = params.draggableY;
       params.draggableList = this._getDraggableList(el, config);
@@ -978,29 +996,29 @@ function createABunchOfClones(els, type) {
   var clone = document.createElement("div");
   var initRect = getRect(els[0]);
   var postProcRects = [];
-  var top = initRect.outerY;
-  var left = initRect.outerX;
+  var top = initRect.absY;
+  var left = initRect.absX;
   var bottom = top + initRect.outerHeight;
   var right = left + initRect.outerWidth;
   els.forEach(function (el) {
     var rect = getRect(el);
 
-    if (rect.outerX < left) {
-      left = rect.outerX;
+    if (rect.absX < left) {
+      left = rect.absX;
     }
 
-    if (rect.outerY < top) {
-      top = rect.outerY;
+    if (rect.absY < top) {
+      top = rect.absY;
     }
 
-    if (rect.outerX + rect.outerWidth > right) {
-      right = rect.outerX + rect.outerWidth;
+    if (rect.absX + rect.outerWidth > right) {
+      right = rect.absX + rect.outerWidth;
     }
 
     ;
 
-    if (rect.outerY + rect.outerHeight > bottom) {
-      bottom = rect.outerY + rect.outerHeight;
+    if (rect.absY + rect.outerHeight > bottom) {
+      bottom = rect.absY + rect.outerHeight;
     }
 
     ;
@@ -1011,8 +1029,8 @@ function createABunchOfClones(els, type) {
     var pos = rect.position;
     var clonedEl = type === "copy" ? createCopyClone(el) : createCheapClone(el); //el [+ fixedToAbsolute] - relativeToParent
 
-    var x = rect.left + (pos === "fixed" ? window.pageXOffset : 0) - left;
-    var y = rect.top + (pos === "fixed" ? window.pageYOffset : 0) - top;
+    var x = rect.absX + (pos === "fixed" ? window.pageXOffset : 0) - left;
+    var y = rect.absY + (pos === "fixed" ? window.pageYOffset : 0) - top;
     clonedEl.id = "cloned_" + clonedEl.id;
     clonedEl.style.position = "absolute";
     clonedEl.style.left = x + "px";
@@ -1041,18 +1059,16 @@ function setupMultiClone(els, type) {
   return {
     clone: clone,
     rect: {
-      left: x,
-      top: y,
-      width: w,
-      height: h
+      x: x,
+      y: y
     }
   };
 }
 
 function setupSingleClone(el, type) {
   var originalRect = getRect(el);
-  var x = originalRect.x;
-  var y = originalRect.y;
+  var x = originalRect.absX;
+  var y = originalRect.absY;
   var pos = originalRect.position;
   var clone = type === "copy" ? createCopyClone(el) : createCheapClone(el);
 
@@ -1066,7 +1082,10 @@ function setupSingleClone(el, type) {
   clone.style.height = originalRect.height + "px";
   return {
     clone: clone,
-    rect: originalRect
+    rect: {
+      x: x,
+      y: y
+    }
   };
 }
 
@@ -1076,8 +1095,8 @@ function setupClone(draggables, config) {
   }
 
   var cloneObj = draggables.length === 1 ? setupSingleClone(draggables[0], config.type) : setupMultiClone(draggables, config.type);
-  var x = cloneObj.rect.left;
-  var y = cloneObj.rect.top;
+  var x = cloneObj.rect.x;
+  var y = cloneObj.rect.y;
   clone = cloneObj.clone;
   clone.id = "cloneAnchor";
   clone.style.left = x + "px";

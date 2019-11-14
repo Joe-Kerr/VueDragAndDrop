@@ -63,9 +63,10 @@ Unit test report
     √ removeEventListener throws if element parameter not found in listeners list
 
   helpers.js
-    √ getRectAbs returns expected data object
+    1) getRectAbs returns expected data object
     √ getRectAbs extracts expected values from DOM node
     √ getRectAbs throws for invalid pixel values
+    - adapt to change in measurement system
 
   index.js
     √ index.js provides expected exports
@@ -101,9 +102,51 @@ Unit test report
     √ Get response from mixin 
 
 
-  76 passing 
+  75 passing 
+  1 pending
+  1 failing
 
- MOCHA  Tests completed successfully
+  1) helpers.js
+       getRectAbs returns expected data object:
+
+      AssertionError [ERR_ASSERTION]: [ 'absX',
+  'absY',
+  'height',
+  'left',
+  'offsetX',
+  'offsetY',
+  'outerHeight',
+  'outerWidth',
+  'outerX',
+  'outerY',
+... deepEqual [ 'height',
+  'left',
+  'outerHeight',
+  'outerWidth',
+  'outerX',
+  'outerY',
+  'position',
+  'top',
+  'width' ]
+      + expected - actual
+
+       [
+      -  "absX"
+      -  "absY"
+         "height"
+         "left"
+      -  "offsetX"
+      -  "offsetY"
+         "outerHeight"
+         "outerWidth"
+         "outerX"
+         "outerY"
+      
+      at Context../projects/plugins/dragAndDrop/tests/unit/helpers.js.test (dist\webpack:\projects\plugins\dragAndDrop\tests\unit\helpers.js:57:1)
+
+
+
+ MOCHA  Tests completed with 1 failure(s)
 
 
 System test report 

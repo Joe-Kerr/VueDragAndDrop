@@ -58,17 +58,17 @@ function createABunchOfClones(els, type) {
 	const initRect = getRect(els[0]);
 	const postProcRects = [];
 	
-	let top = initRect.outerY;
-	let left = initRect.outerX;
+	let top = initRect.absY;
+	let left = initRect.absX;
 	let bottom = top + initRect.outerHeight;
 	let right = left + initRect.outerWidth;
 	
 	els.forEach((el)=>{ 
 		const rect = getRect(el);
-		if(rect.outerX < left) { left = rect.outerX; }
-		if(rect.outerY < top) { top = rect.outerY; }
-		if(rect.outerX + rect.outerWidth > right) { right = rect.outerX + rect.outerWidth; };
-		if(rect.outerY + rect.outerHeight > bottom) { bottom = rect.outerY + rect.outerHeight; };
+		if(rect.absX < left) { left = rect.absX; }
+		if(rect.absY < top) { top = rect.absY; }
+		if(rect.absX + rect.outerWidth > right) { right = rect.absX + rect.outerWidth; };
+		if(rect.absY + rect.outerHeight > bottom) { bottom = rect.absY + rect.outerHeight; };
 		postProcRects.push(rect);			
 	});
 	
@@ -78,8 +78,8 @@ function createABunchOfClones(els, type) {
 		const clonedEl = (type === "copy") ? createCopyClone(el) : createCheapClone(el);		
 		
 		//el [+ fixedToAbsolute] - relativeToParent
-		const x = rect.left + ( (pos === "fixed") ? window.pageXOffset : 0 ) - left;
-		const y = rect.top + ( (pos === "fixed") ? window.pageYOffset : 0 ) - top;
+		const x = rect.absX + ( (pos === "fixed") ? window.pageXOffset : 0 ) - left;
+		const y = rect.absY + ( (pos === "fixed") ? window.pageYOffset : 0 ) - top;
 		
 		clonedEl.id = "cloned_"+clonedEl.id;
 		clonedEl.style.position = "absolute";
@@ -104,13 +104,13 @@ function setupMultiClone(els, type) {
 
 	clone.style.position = "absolute";
 
-	return {clone, rect: {left: x, top: y, width: w, height: h}};
+	return {clone, rect: {x, y}};
 }
 
 function setupSingleClone(el, type) {
 	const originalRect = getRect(el);
-	const x = originalRect.x;
-	const y = originalRect.y;
+	const x = originalRect.absX;
+	const y = originalRect.absY;
 	const pos = originalRect.position;	
 	const clone = (type === "copy") ? createCopyClone(el) : createCheapClone(el);
 	
@@ -124,7 +124,7 @@ function setupSingleClone(el, type) {
 	clone.style.width = originalRect.width+"px";
 	clone.style.height = originalRect.height+"px";
 			
-	return {clone, rect: originalRect};
+	return {clone, rect: {x,y}};
 }	
 
 function setupClone(draggables, config) {		
@@ -132,8 +132,8 @@ function setupClone(draggables, config) {
 
 	const cloneObj = (draggables.length === 1) ? setupSingleClone(draggables[0], config.type) : setupMultiClone(draggables, config.type);	
 
-	const x = cloneObj.rect.left;
-	const y = cloneObj.rect.top;
+	const x = cloneObj.rect.x;
+	const y = cloneObj.rect.y;
 	
 	clone = cloneObj.clone;
 	clone.id = "cloneAnchor";

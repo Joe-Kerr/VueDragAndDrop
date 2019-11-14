@@ -188,8 +188,8 @@ class DragAndDrop {
 		params.droppableEl = dom;
 		params.droppableData = data;
 		params.droppableType = config.droppableType;
-		params.droppableX = xy.left;
-		params.droppableY = xy.top;
+		params.droppableX = xy.offsetX;
+		params.droppableY = xy.offsetY;
 		params.endX = event.pageX;
 		params.endY = event.pageY;				
 	}	
@@ -208,8 +208,8 @@ class DragAndDrop {
 		params.draggableData = data;
 		params.draggableType = config.draggableType;
 		params.draggableEl = dom;
-		params.draggableX = xy.left;
-		params.draggableY = xy.top;
+		params.draggableX = xy.offsetX;
+		params.draggableY = xy.offsetY;
 		params.draggableNewX = params.draggableX;
 		params.draggableNewY = params.draggableY;
 

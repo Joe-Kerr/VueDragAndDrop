@@ -77,3 +77,5 @@ test("getRectAbs throws for invalid pixel values", ()=>{
 	
 	computedStyles.borderLeftWidth = "10px";
 });
+
+test("adapt to change in measurement system");
