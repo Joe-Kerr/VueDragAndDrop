@@ -32,18 +32,6 @@ function pxToInt(px) {
 export function getRectAbs(el) {
 	const rectData = {
 		position: "",
-				
-		//layout box
-		outerX: 0,
-		outerY: 0,
-		outerWidth: 0,
-		outerHeight: 0,
-		
-		//equiv to css vals
-		left: 0,
-		top: 0,
-		width: 0,
-		height: 0,
 		
 		//absolute page (absolute) or viewport (fixed) position minus marginLeft/Top
 		absX: 0,
@@ -73,31 +61,23 @@ export function getRectAbs(el) {
 	
 	const marginLeft = pxToInt(cstyles.marginLeft);
 	const marginTop = pxToInt(cstyles.marginTop);
-		
-	rectData.position = elPos;
-	
-	rectData.outerX = (elPos !== "fixed") ? rect.x+window.pageXOffset : rect.x;
-	rectData.outerY = (elPos !== "fixed") ? rect.y+window.pageYOffset : rect.y;
-	rectData.left = rectData.outerX - marginLeft;
-	rectData.top = rectData.outerY - marginTop;
 
-	rectData.outerWidth = rect.width;
-	rectData.outerHeight = rect.height;
-	rectData.width = rectData.outerWidth - borderH - paddingH;;
-	rectData.height = rectData.outerHeight - borderV - paddingV;	
-	//
-	rectData.absX = ((elPos !== "fixed") ? rect.x+window.pageXOffset : rect.x) - marginLeft;
-	rectData.absY = ((elPos !== "fixed") ? rect.y+window.pageYOffset : rect.y) - marginTop;
+	const scrollX = (elPos === "fixed") ? 0 : window.pageXOffset;
+	const scrollY = (elPos === "fixed") ? 0 : window.pageYOffset;
 	
-	rectData.offsetX = el.offsetLeft;
-	rectData.offsetY = el.offsetTop;
+	rectData.position = elPos;
+		
+	rectData.absX = rect.x + scrollX - marginLeft;
+	rectData.absY = rect.y + scrollY - marginTop;
+	
+	rectData.offsetX = el.offsetLeft - marginLeft;
+	rectData.offsetY = el.offsetTop - marginTop;
 	
 	rectData.outerWidth = rect.width;
 	rectData.outerHeight = rect.height;
 	
 	rectData.width = rectData.outerWidth - borderH - paddingH;;
 	rectData.height = rectData.outerHeight - borderV - paddingV;		
-	//
 	
 	return rectData;	
 }
