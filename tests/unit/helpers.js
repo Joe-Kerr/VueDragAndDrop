@@ -5,42 +5,50 @@ suite("helpers.js");
 
 const backups = {};
 
-const computedStyles = {
+let position = "absolute";
+let x = 10;
+let y = 20;
+let width = 30;
+let height = 40;
+
+const computedStyles = ()=>({
 		borderLeftWidth: "10px",
-		borderRightWidth: "11px",
-		borderTopWidth: "12px", 
-		borderBottomWidth: "13px",
+		borderRightWidth: "12px",
+		borderTopWidth: "14px", 
+		borderBottomWidth: "16px",
 
-		paddingLeft:" 14px",
-		paddingRight:" 15px",
-		paddingTop: "16px",
-		paddingBottom: "17px",
+		paddingLeft:"18px",
+		paddingRight:"20px",
+		paddingTop: "22px",
+		paddingBottom: "24px",
 
-		marginLeft: "18px",
-		marginTop: "19px",
+		marginLeft: "26px",
+		marginTop: "28px",
 
-		position: "absolute"
-	};
+		position
+});
 
-function getComputedStyleFake() {
-	return computedStyles;
-}
-
-function getBoundingClientRectFake() {
-	return {
-		x: 1,
-		y: 2,
-		width: 3,
-		height: 4
-	};
-}
+const el = {
+	offsetLeft: 100,
+	offsetTop: 200,
+	getBoundingClientRect: ()=>({x, y, width, height}),
+	parentNode: {
+		style: {transform: ""},
+		parentNode: {
+			style: {transform: ""},
+			parentNode: {
+				parentNode: null
+			}
+		}
+	}
+};
 
 before(()=>{
 	backups.window = window;
 	
 	window = {
-		getComputedStyle: getComputedStyleFake,
-		pageXOffset: 21,
+		getComputedStyle: computedStyles,
+		pageXOffset: 22,
 		pageYOffset: 32
 	};
 });
@@ -50,32 +58,87 @@ after(()=>{
 	backups.window = null;
 });
 
+beforeEach(()=>{
+	window.pageXOffset = 22;
+	window.pageYOffset = 32;
+	x = 10;
+	y = 20;
+	width = 30;
+	height = 40;	
+	el.parentNode.parentNode.style.transform = "";
+});
+
+//
+// Parameterized tests
+//
+
+const parameterizedTests = [
+{
+	test: "getRectAbs extracts expected values from absolute DOM node",
+	prep() { position = "absolute"; },
+	parameters: {
+		position: "absolute",
+		absX: 10 + 22 - 26,
+		absY: 20 + 32 - 28,
+		offsetX: 100 - 26,
+		offsetY: 200 - 28,
+		outerWidth: 30,
+		outerHeight: 40,
+		width: 30 - 10-12 - 18-20,
+		height: 40 - 14-16 - 22-24
+	}
+},
+
+{
+	test: "getRectAbs extracts expected values from fixed DOM node",
+	prep() { position = "fixed"; },
+	parameters: {
+		position: "fixed",
+		absX: 10 - 26,
+		absY: 20 - 28,
+		offsetX: 100 - 26,
+		offsetY: 200 - 28,
+		outerWidth: 30,
+		outerHeight: 40,
+		width: 30 - 10-12 - 18-20,
+		height: 40 - 14-16 - 22-24
+	}
+}
+]
+
+parameterizedTests.forEach((testData, i)=>{	
+	test(testData.test, ()=>{
+		testData.prep();
+	
+		const res = getRectAbs(el);
+		
+		const params = testData.parameters;
+		for(const prop in params) {
+			assert.equal(res[prop], params[prop], "Assertion failed for '"+prop+"' of param set "+i);
+		}
+	});
+});
+
+//
+// Manual tests
+//
+
 test("getRectAbs returns expected data object", ()=>{
-	const expected = ["position", "outerX", "outerY", "outerWidth", "outerHeight", "left", "top", "width", "height"].sort();
-	const actual = Object.keys(getRectAbs({getBoundingClientRect: getBoundingClientRectFake})).sort();
+	const expected = ["position", "absX", "absY", "outerWidth", "outerHeight", "offsetX", "offsetY", "width", "height"].sort();
+	const actual = Object.keys(getRectAbs(el)).sort();
 	
 	assert.deepEqual(actual, expected);
 });
 
-test("getRectAbs extracts expected values from DOM node", ()=>{
-	const res = getRectAbs({getBoundingClientRect: getBoundingClientRectFake});
-	
-	assert.equal(res.position, "absolute");
-	assert.equal(res.outerX, 22);
-	assert.equal(res.outerY, 34);
-	assert.equal(res.outerWidth, 3);
-	assert.equal(res.outerHeight, 4);
-	assert.equal(res.left, 4);
-	assert.equal(res.top, 15);
-	assert.equal(res.width, -47);
-	assert.equal(res.height, -54);
-});
 
 test("getRectAbs throws for invalid pixel values", ()=>{
-	computedStyles.borderLeftWidth = "!!px";
-	assert.throws(()=>{ getRectAbs({getBoundingClientRect: getBoundingClientRectFake}) }, {message: /Failed to parse pixel value/});
+	window.getComputedStyle = ()=>{
+		const styles = computedStyles();
+		styles.borderLeftWidth = "!!px";
+		return styles;
+	};
+	
+	assert.throws(()=>{ getRectAbs(el); }, {message: /Failed to parse pixel value/});
 	
 	computedStyles.borderLeftWidth = "10px";
 });
-
-test("adapt to change in measurement system");

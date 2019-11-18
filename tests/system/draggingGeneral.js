@@ -24,7 +24,7 @@ beforeEach(async ()=>{
 	const ps = [];
 	const ids = [
 		"draggableFree", "draggableFreeFixed", "draggableWithStyle",
-		 "reset"
+		 "reset", "scale", "unscale"
 	];
 	
 	ids.forEach((id)=>{
@@ -45,34 +45,21 @@ afterEach(async ()=>{
 	await driver.executeScript("window.scroll(0,0);");
 });
 
-test("fixed draggable can be dragged when viewport not at origin", async ()=>{
-	await scrollTo(21, 32);
+async function draggableCanBeDragged(draggableType, scrolled, scaled) {
+	const draggable = to[draggableType];
 	
-	const before = await to.draggableFreeFixed.getRect();
-	const mx0 = before.x;
-	const my0 = before.y;	
-	const mxEnd = 400;
-	const myEnd = 300;
-
-	await driver.actions({async: true})
-		.move({x: mx0, y: my0}) 
-		.press()
-		.move({duration: 100, x: mxEnd, y: myEnd})
-		.pause(1)
-		.release()
-		.perform();	
+	if(scrolled) {
+		await scrollTo(5, 8);		
+	}
 	
-	const after = await to.draggableFreeFixed.getRect();
-
-	assert.equal(after.x, mxEnd);
-	assert.equal(after.y, myEnd);	
-});
-
-
-test("absolute draggable can be dragged when viewport not at origin", async ()=>{	
-	await scrollTo(21, 32);	
+	if(scaled) {
+		await to.scale.click();
+	}
+	else {
+		await to.unscale.click();
+	}
 	
-	const before = await to.draggableFree.getRect();
+	const before = await draggable.getRect();
 	const mx0 = before.x;
 	const my0 = before.y;	
 	const mxEnd = 400;
@@ -86,54 +73,29 @@ test("absolute draggable can be dragged when viewport not at origin", async ()=>
 		.release()
 		.perform();	
 	
-	const after = await to.draggableFree.getRect();
-	
+	const after = await draggable.getRect();
+
 	assert.equal(after.x, mxEnd);
-	assert.equal(after.y, myEnd);
-});
+	assert.equal(after.y, myEnd);		
+}
 
-test("clone of fixed draggable renders before mousemove when viewport not at origin", async ()=>{
+async function cloneRendersBeforeMouseMove(draggableType, scrolled, scaled) {
 	const {By} = testSuite;
-	await scrollTo(21, 32);	
-	
-	let elPos = await to.draggableFreeFixed.getRect();
-	let clonePos;	
-	const mx0 = elPos.x;
-	const my0 = elPos.y;	
-	const mxEnd = 400;
-	const myEnd = 300;	
-	
-	await driver.actions({async: true})
-		.move({x: mx0, y: my0}) 
-		.press()
-		.pause(1)
-		.perform();	
-	
-	const clone = await driver.findElement(By.id("cloneAnchor"));
-	clonePos = await clone.getRect();
 
-	assert.equal(elPos.x, clonePos.x);
-	assert.equal(elPos.y, clonePos.y);
-		
-	await driver.actions({async: true})	
-		.move({duration: 100, x: mxEnd, y: myEnd})
-		.pause(1)
-		.perform();	
+	const draggable = to[draggableType];
 	
-	clonePos = await clone.getRect();	
-	assert.equal(clonePos.x, mxEnd);
-	assert.equal(clonePos.y, myEnd);	
+	if(scrolled) {
+		await scrollTo(5, 8);		
+	}
 	
-	await driver.actions({async: true})		
-		.release()
-		.perform();	
-});
-
-test("clone of aboslute draggable renders before mousemove when viewport not at origin", async ()=>{
-	const {By} = testSuite;
-	await scrollTo(21, 32);	
+	if(scaled) {
+		await to.scale.click();
+	}
+	else {
+		await to.unscale.click();
+	}	
 	
-	let elPos = await to.draggableFree.getRect();
+	let elPos = await draggable.getRect();
 	let clonePos;
 	const mx0 = elPos.x;
 	const my0 = elPos.y;	
@@ -149,8 +111,10 @@ test("clone of aboslute draggable renders before mousemove when viewport not at 
 	const clone = await driver.findElement(By.id("cloneAnchor"));
 	clonePos = await clone.getRect();
 
-	assert.equal(elPos.x, clonePos.x);
-	assert.equal(elPos.y, clonePos.y);	
+	assert.equal(clonePos.x, elPos.x);
+	assert.equal(clonePos.y, elPos.y);	
+	assert.equal(clonePos.width, elPos.width);	
+	assert.equal(clonePos.height, elPos.height);	
 	
 	await driver.actions({async: true})	
 		.move({duration: 100, x: mxEnd, y: myEnd})
@@ -164,71 +128,38 @@ test("clone of aboslute draggable renders before mousemove when viewport not at 
 	await driver.actions({async: true})		
 		.release()
 		.perform();		
+};
+
+
+const inputsForDraggableAndCloneTests = [
+	["draggableFree", true, false],
+	["draggableFree", false, false],
+	
+	["draggableFreeFixed", true, false],
+	["draggableFreeFixed", false, false],
+	
+	["draggableWithStyle", true, false],
+	["draggableWithStyle", false, false],
+];
+
+inputsForDraggableAndCloneTests.forEach((argSet)=>{
+	const position = argSet[0];
+	const isScrolled = argSet[1];
+	
+	const scrolledTxt = (isScrolled) ? "scrolled" : "not scrolled";
+	
+	const desc = position+" draggable can be dragged when container is "+scrolledTxt;
+	
+	test(desc, async ()=>{ await draggableCanBeDragged.apply(null, argSet); });
 });
 
-test("clone has same dimension as element", async ()=>{
-	const {By} = testSuite;
-	const elDim = await to.draggableFree.getRect();
+inputsForDraggableAndCloneTests.forEach((argSet)=>{
+	const position = argSet[0];
+	const isScrolled = argSet[1];
 	
-	const mx0 = elDim.x;
-	const my0 = elDim.y;		
-	const mxEnd = 400;
-	const myEnd = 300;
+	const scrolledTxt = (isScrolled) ? "scrolled" : "not scrolled";
 	
-	await driver.executeScript("window.scroll(21,32);");
+	const desc = "clone of "+position+" draggbale renders before mousemove when container is "+scrolledTxt;
 	
-	await driver.actions({async: true})
-		.move({x: mx0, y: my0}) 
-		.press()
-		.move({duration: 100, x: mxEnd, y: myEnd})
-		.pause(1)
-		.perform();
-		
-	const clone = await driver.findElement(By.id("cloneAnchor"));	
-	const cloneDim = await clone.getRect();
-	
-	assert.equal(cloneDim.width, elDim.width);
-	assert.equal(cloneDim.height, elDim.height);
-	
-	await driver.actions({async: true})	
-		.release()
-		.perform();	
-});
-
-test("clone of draggable with padding, border, margin and scroll bars renders", async ()=>{
-	const {By} = testSuite;
-	
-	let elPos = await to.draggableWithStyle.getRect();
-	let clonePos;
-	const mx0 = elPos.x;
-	const my0 = elPos.y;	
-	const mxEnd = 400;
-	const myEnd = 300;	
-	
-	await driver.actions({async: true})
-		.move({x: mx0, y: my0}) 
-		.press()
-		.pause(1)
-		.perform();	
-	
-	const clone = await driver.findElement(By.id("cloneAnchor"));
-	clonePos = await clone.getRect();
-
-	assert.equal(elPos.x, clonePos.x);
-	assert.equal(elPos.y, clonePos.y);	
-	assert.equal(elPos.width, clonePos.width);
-	assert.equal(elPos.height, clonePos.height);	
-	
-	await driver.actions({async: true})	
-		.move({duration: 100, x: mxEnd, y: myEnd})
-		.pause(1)
-		.perform();	
-	
-	clonePos = await clone.getRect();	
-	assert.equal(clonePos.x, mxEnd);
-	assert.equal(clonePos.y, myEnd);	
-	
-	await driver.actions({async: true})		
-		.release()
-		.perform();	
+	test(desc, async ()=>{ await cloneRendersBeforeMouseMove.apply(null, argSet); });
 });

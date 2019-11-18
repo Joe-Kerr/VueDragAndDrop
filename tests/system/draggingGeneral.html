@@ -16,6 +16,7 @@
 			body {
 				width: 2048px;
 				height: 2048px;
+				margin: 0;
 			}
 			
 			.draggable {				
@@ -74,19 +75,36 @@ const installer = dragAndDrop.installer;
 		store,
 		template: `
 			<section>	
-				<div v-drag&drop:draggable.only="{dragstop: move}" id="draggableFree" class="draggable" :style="{left: x+'px', top: y+'px', position:'absolute'}">Draggable without droppable</div>
-				
-				<div v-drag&drop:draggable.only="{dragstop: move2}" id="draggableFreeFixed" class="draggable" :style="{left: x2+'px', top: y2+'px', position:'fixed'}">Draggable wo droppable (fixed)</div>
-				
-				<div v-drag&drop:draggable.only="{dragstop: move3}" id="draggableWithStyle" class="draggable" :style="{left: x3+'px', top: y3+'px'}">
-					<div class="scrollBarsToParent">Draggable with padding, margin, etc.</div>
+				<div id="wrapper" :style="scaleStyle">
+					<div v-drag&drop:draggable.only="{dragstop: move1, scale: 'scale'}" id="draggableFree" class="draggable" :style="{left: x+'px', top: y+'px', position:'absolute'}">Draggable without droppable</div>
+					
+					<div v-drag&drop:draggable.only="{dragstop: move2, scale: 'scale'}" id="draggableFreeFixed" class="draggable" :style="{left: x2+'px', top: y2+'px', position:'fixed'}">Draggable wo droppable (fixed)</div>
+					
+					<div v-drag&drop:draggable.only="{dragstop: move3, scale: 'scale'}" id="draggableWithStyle" class="draggable" :style="{left: x3+'px', top: y3+'px'}">
+						<div class="scrollBarsToParent">Draggable with padding, margin, etc.</div>
+					</div>
 				</div>
 				
-				
-				<button @click="reset" id="reset" :style="{position: 'fixed', rigt: '0px', bottom: '0px'}">r</button>
+				<pre id="log" style="position: fixed; right: 0px; bottom: 30px;">{{log}}</pre>
+				<button @click="reset" id="reset" style="position: fixed; right: 0px; bottom: 0px;">r</button>
+				<button @click="scale=0.5" id="scale" style="position: fixed; right: 20px; bottom: 0px;">scale</button>
+				<button @click="scale=1" id="unscale" style="position: fixed; right: 70px; bottom: 0px;">unscale</button>
+				<button @click="debug" id="debug" style="position: fixed; right: 140px; bottom: 0px;">d</button>
 				
 			</section>
 		`,
+		computed: {
+			scaleStyle() {
+				const style = {};
+				
+				if(this.scale != 1) {
+					style.transform = "scale("+this.scale+")";
+					style.transformOrigin = "0 0";
+				}
+				
+				return style;
+			}
+		},
 		data() {
 			return {
 				x: 130, 
@@ -95,27 +113,52 @@ const installer = dragAndDrop.installer;
 				y2: 0,
 				x3: 390,
 				y3: 0,
+				scale: 1,
+				log: ""
+				
 			}
 		},
 		methods: {
-			move(event, data) {
-				this.x = data.draggableNewX;
-				this.y = data.draggableNewY;
+			move(data, targetSuffix="") {
+				const x = data.draggableX + Math.round(data.deltaX / this.scale);
+				const y = data.draggableY + Math.round(data.deltaY / this.scale);
+				
+				const keyX = "x"+targetSuffix;
+				const keyY = "y"+targetSuffix;
+				
+				this[keyX] = x;
+				this[keyY] = y;
+				
 				//console.error(JSON.stringify(data))
+			},
+			
+			move1(event, data) {
+				this.move(data);
+				
 			},
 			move2(event, data) {
-				this.x2 = data.draggableNewX;
-				this.y2 = data.draggableNewY;
-				//console.error(JSON.stringify(data))
+				this.move(data, 2);
 			},
 			move3(event, data) {
-				this.x3 = data.draggableNewX;
-				this.y3 = data.draggableNewY;
-				//console.error(JSON.stringify(data))
+				this.move(data, 3);
 			},
 			reset() {
 				document.title = "reloading";
 				window.location.reload(false);
+			},
+			debug() {
+				const log = {};
+				["draggableFree", "draggableFreeFixed", "draggableWithStyle"].forEach((id)=>{
+					const el = document.getElementById(id);
+					log[id] = {
+						rect: el.getBoundingClientRect(),
+						offsetX: el.offsetLeft,
+						offsetY: el.offsetTop,
+					
+					};
+				});
+				console.log(log)
+				this.log = JSON.stringify(log);
 			}
 		}
 	

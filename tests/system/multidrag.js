@@ -25,7 +25,7 @@ beforeEach(async ()=>{
 	const ids = [
 		"a1", "a2", "a3",
 		"f1", "f2", "f3",
-		"reset", "select"
+		"reset", "select", "scale", "unscale"
 	];
 	
 	ids.forEach((id)=>{
@@ -37,8 +37,6 @@ beforeEach(async ()=>{
 	ids.forEach((id, index)=>{
 		to[id] = res[index];
 	});		
-	
-	to.body = driver.findElement(By.css("body"));
 });
 
 afterEach(async ()=>{
@@ -48,9 +46,17 @@ afterEach(async ()=>{
 	await driver.executeScript("window.scroll(0,0);");
 });
 
-test("subset of fixed and absolute draggables can be dragged when viewport not at origin", async ()=>{
+
+async function draggablesCanBeDragged(scaled) {
 	await to.select.click();
 	await scrollTo(21, 32);
+	
+	if(scaled) {
+		to.scale.click();
+	}
+	else {
+		to.unscale.click();
+	}
 	
 	const ids = ["a1", "a2", "a3", "f1", "f2", "f3"];
 	
@@ -87,14 +93,21 @@ test("subset of fixed and absolute draggables can be dragged when viewport not a
 		
 		assert.equal(before[i].x + dx, after[i].x, "Expected draggable (x) #id "+ids[i]+" to have moved by "+dx);
 		assert.equal(before[i].y + dy, after[i].y, "Expected draggable (y) #id "+ids[i]+" to have moved by "+dy);
-	}
-});
+	}	
+}
 
-test("clones of fixed and absolute draggable subset render before mousemove when viewport not at origin", async ()=>{
+async function clonesRender(scaled) {
 	const {By} = testSuite;
 	
 	await to.select.click();
 	await scrollTo(21, 32);
+	
+	if(scaled) {
+		to.scale.click();
+	}
+	else {
+		to.unscale.click();
+	}	
 	
 	const draggables = ["a2", "a3", "f2", "f3"];
 	const clones = draggables.map((id)=>("cloned_"+id));
@@ -146,33 +159,12 @@ test("clones of fixed and absolute draggable subset render before mousemove when
 	await driver.actions({async: true})		
 		.release()
 		.perform();		
+}
+
+test("subset of fixed and absolute draggables can be dragged when container scrolled", async ()=>{
+	await draggablesCanBeDragged(false);
 });
 
-test("clone anchor has origin at top-left-most draggable", async ()=>{
-	const {By} = testSuite;
-	
-	await to.select.click();
-	await scrollTo(21, 32);
-	
-	const topLeft = await to.a2.getRect();
-	const mx0 = topLeft.x; //a2
-	const my0 = topLeft.y;	
-	const mxEnd = 400;
-	const myEnd = 300;
-	
-	await driver.actions({async: true})
-		.move({x: mx0, y: my0}) 
-		.press()
-		.pause(1)
-		.perform();	
-	
-	const anchor = await driver.findElement(By.id("cloneAnchor"));
-	const anchorRect = await anchor.getRect();
-
-	assert.equal(anchorRect.x, topLeft.x);
-	assert.equal(anchorRect.y, topLeft.y);
-	
-	await driver.actions({async: true})		
-		.release()
-		.perform();				
+test("clones of fixed and absolute draggable subset render before mousemove when container scrolled", async ()=>{
+	await clonesRender(false);
 });

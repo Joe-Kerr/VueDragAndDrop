@@ -19,7 +19,18 @@
 			}
 			
 			#controls {
-				margin-top: 300px;
+				position: fixed;
+				bottom: 0px;
+				left: 0px;
+			}
+			
+			#draggableContainer {
+				position: absolute;
+				width: 800px;
+				height: 600px;
+				margin: 2px;
+				padding: 4px;
+				border: 8px solid grey;
 			}
 			
 			.draggable {				
@@ -37,7 +48,19 @@
 			
 			.fixed {
 				position: fixed;
-			}			
+			}
+
+			#a3 {
+				margin: 2px;
+				padding: 4px;
+				border: 6px dotted blue;
+			}
+			
+			#f3 {
+				margin: 4px;
+				padding: 6px;
+				border: 2px dotted red;			
+			}
 		</style>
 
 		<title>ready</title>
@@ -61,7 +84,7 @@
 		store,
 		template: `
 			<div>
-				<section id="draggableContainer">
+				<section id="draggableContainer" :style="scaleStyle">
 					<div id="a1" class="draggable absolute" style="left: 0px; top: 50px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dAbs1</div>
 					<div id="a2" class="draggable absolute" style="left: 130px; top: 50px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dAbs2</div>
 					<div id="a3" class="draggable absolute" style="left: 260px; top: 50px;" v-drag&drop:draggable.only="{dragstop, multi: 'selection'}">dAbs3</div>
@@ -73,7 +96,9 @@
 				
 				<section id="controls">
 				<button id="reset" @click="reset">reset</button><br>
-				<button id="select" @click="select">select</button> <input id="selection" type="text" v-model="selectionText" />			
+				<button id="select" @click="select">select</button> <input id="selection" type="text" v-model="selectionText" />
+				<button @click="scale=0.5" id="scale">scale</button>
+				<button @click="scale=1" id="unscale">unscale</button>				
 				</section>
 			</div>
 		`,
@@ -81,14 +106,26 @@
 		data() {
 			return {
 				selection: [],
-				selectionText: "a2,a3,f2,f3"
+				selectionText: "a2,a3,f2,f3",
+				scale: 1
 			}
 		},
-		
+		computed: {
+			scaleStyle() {
+				const style = {};
+				
+				if(this.scale != 1) {
+					style.transform = "scale("+this.scale+")";
+					style.transformOrigin = "0 0";
+				}
+				
+				return style;
+			}
+		},		
 		methods: {
 			dragstop(event, data) {
-				const dx = data.endX - data.startX;
-				const dy = data.endY - data.startY;
+				const dx = Math.round(data.deltaX/this.scale);
+				const dy = Math.round(data.deltaY/this.scale);
 				
 				this.selection.forEach((el)=>{
 					const x = parseInt(el.style.left.replace("px", ""));
