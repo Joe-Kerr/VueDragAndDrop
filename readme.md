@@ -273,6 +273,13 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.1
+Fix: Logic error in pixel parser helper
+Fix: Removed caching in helper which was broken beyond good and evil
+Fix: Drag & drop should now be independent of parent nodes' layout style
+
+Chg: General cleanup in code and tests
+
 ### 1.2.0
 - New: Added hot drag&drop. Allows init drag and drop operation programmatically
 - Chg: Test report now also contains system test log

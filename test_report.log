@@ -63,10 +63,10 @@ Unit test report
     √ removeEventListener throws if element parameter not found in listeners list
 
   helpers.js
-    1) getRectAbs returns expected data object
-    √ getRectAbs extracts expected values from DOM node
+    √ getRectAbs extracts expected values from absolute DOM node
+    √ getRectAbs extracts expected values from fixed DOM node
+    √ getRectAbs returns expected data object
     √ getRectAbs throws for invalid pixel values
-    - adapt to change in measurement system
 
   index.js
     √ index.js provides expected exports
@@ -102,51 +102,9 @@ Unit test report
     √ Get response from mixin 
 
 
-  75 passing 
-  1 pending
-  1 failing
+  77 passing 
 
-  1) helpers.js
-       getRectAbs returns expected data object:
-
-      AssertionError [ERR_ASSERTION]: [ 'absX',
-  'absY',
-  'height',
-  'left',
-  'offsetX',
-  'offsetY',
-  'outerHeight',
-  'outerWidth',
-  'outerX',
-  'outerY',
-... deepEqual [ 'height',
-  'left',
-  'outerHeight',
-  'outerWidth',
-  'outerX',
-  'outerY',
-  'position',
-  'top',
-  'width' ]
-      + expected - actual
-
-       [
-      -  "absX"
-      -  "absY"
-         "height"
-         "left"
-      -  "offsetX"
-      -  "offsetY"
-         "outerHeight"
-         "outerWidth"
-         "outerX"
-         "outerY"
-      
-      at Context../projects/plugins/dragAndDrop/tests/unit/helpers.js.test (dist\webpack:\projects\plugins\dragAndDrop\tests\unit\helpers.js:57:1)
-
-
-
- MOCHA  Tests completed with 1 failure(s)
+ MOCHA  Tests completed successfully
 
 
 System test report 
@@ -165,18 +123,23 @@ System test report
     √ draggable that is also droppable doesn't fire for itself 
 
   Dragging general
-    √ fixed draggable can be dragged when viewport not at origin 
-    √ absolute draggable can be dragged when viewport not at origin 
-    √ clone of fixed draggable renders before mousemove when viewport not at origin 
-    √ clone of aboslute draggable renders before mousemove when viewport not at origin 
-    √ clone has same dimension as element 
-    √ clone of draggable with padding, border, margin and scroll bars renders 
+    √ draggableFree draggable can be dragged when container is scrolled 
+    √ draggableFree draggable can be dragged when container is not scrolled 
+    √ draggableFreeFixed draggable can be dragged when container is scrolled 
+    √ draggableFreeFixed draggable can be dragged when container is not scrolled 
+    √ draggableWithStyle draggable can be dragged when container is scrolled 
+    √ draggableWithStyle draggable can be dragged when container is not scrolled 
+    √ clone of draggableFree draggbale renders before mousemove when container is scrolled 
+    √ clone of draggableFree draggbale renders before mousemove when container is not scrolled 
+    √ clone of draggableFreeFixed draggbale renders before mousemove when container is scrolled 
+    √ clone of draggableFreeFixed draggbale renders before mousemove when container is not scrolled 
+    √ clone of draggableWithStyle draggbale renders before mousemove when container is scrolled 
+    √ clone of draggableWithStyle draggbale renders before mousemove when container is not scrolled 
 
   Multi dragging
-    √ subset of fixed and absolute draggables can be dragged when viewport not at origin 
-    √ clones of fixed and absolute draggable subset render before mousemove when viewport not at origin 
-    √ clone anchor has origin at top-left-most draggable 
+    √ subset of fixed and absolute draggables can be dragged when container scrolled 
+    √ clones of fixed and absolute draggable subset render before mousemove when container scrolled 
 
 
-  18 passing 
+  23 passing 
 
