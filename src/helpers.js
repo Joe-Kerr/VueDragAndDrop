@@ -1,10 +1,13 @@
 function pxToInt(px) {
-	if(px === "") {return 0;}
+	if(px === "") {
+		return 0;
+	}
 	
 	const intVal = parseInt(px.replace("px", ""));
+	const test = ""+intVal;
 	
-	if(isNaN(intVal)) {
-		throw new Error("Failed to parse pixel value");
+	if(test.length+2 !== px.length || !px.endsWith("px") || isNaN(intVal)) {
+		throw new Error("Failed to parse pixel value. Got: "+px);
 	}
 	
 	return intVal;

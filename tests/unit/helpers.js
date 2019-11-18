@@ -132,13 +132,17 @@ test("getRectAbs returns expected data object", ()=>{
 
 
 test("getRectAbs throws for invalid pixel values", ()=>{
+	let dataFail;
 	window.getComputedStyle = ()=>{
 		const styles = computedStyles();
-		styles.borderLeftWidth = "!!px";
+		styles.borderLeftWidth = dataFail;
 		return styles;
-	};
+	};	
 	
+	dataFail = "10px 5px 5px 1px";
+	assert.throws(()=>{ getRectAbs(el); }, {message: /Failed to parse pixel value/});
+		
+	dataFail = "10em";
 	assert.throws(()=>{ getRectAbs(el); }, {message: /Failed to parse pixel value/});
 	
-	computedStyles.borderLeftWidth = "10px";
 });
