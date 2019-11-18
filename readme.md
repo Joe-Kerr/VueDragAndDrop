@@ -19,7 +19,7 @@ Example: given a collection of images and whenever an image is dragged over:
 - Same draggable can behave differently for specific droppabbles
 - Minimally invasive: doesn't touch Vue-owned DOM, doesn't prevent or stop events
 - Use as Vue directive or by [hot drag&drop](#hot-drag-and-drop) via Mixin
-
+- **Version 1 is experimental. All features and interfaces may change.**
 
 ## Overview
 
@@ -142,11 +142,11 @@ Callback function that triggers after the mousedown event.
 
 Callback function that triggers after the mouseup event.
 
-### multi< string > **experimental**
+### multi< string >
 
 Name of the property (computed, data, props) that holds a multi drag selection of DOM nodes that should be moved. Default: undefined
 
-### cloneType< string > **experimental**
+### cloneType< string >
 
 What should the draggable clone/s look like.
 
@@ -156,7 +156,7 @@ What should the draggable clone/s look like.
 
 Default: "copy"
 
-### cloneWillChangeThreshold< number > **experimental**
+### cloneWillChangeThreshold< number >
 
 How many draggables in a multiselection does it require to set the css property "willChange". Can improve performance greatly **if** used sparsely. Default: 0 (do not set willChange)
 
