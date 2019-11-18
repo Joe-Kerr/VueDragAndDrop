@@ -434,20 +434,16 @@ function dragAndDrop(store, subsystems) {
 
 /* harmony default export */ var directive = (dragAndDrop);
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/helpers.js
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-var rectId = null;
-var rectCache = null;
-
 function pxToInt(px) {
   if (px === "") {
     return 0;
   }
 
   var intVal = parseInt(px.replace("px", ""));
+  var test = "" + intVal;
 
-  if (isNaN(intVal)) {
-    throw new Error("Failed to parse pixel value");
+  if (test.length + 2 !== px.length || !px.endsWith("px") || isNaN(intVal)) {
+    throw new Error("Failed to parse pixel value. Got: " + px);
   }
 
   return intVal;
@@ -457,38 +453,31 @@ function pxToInt(px) {
 // "content-box": outer width = inner width + padding + border
 // "border-box": outer width = (inner width - padding - border) + padding + border
 //*style.width 
-// "inner width"
+// "inner width" (not scaled)
 //*clientWdith (https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth)
-// inner width + padding | 0 for inline/css-less
+// inner width + padding | 0 for inline/css-less (not scaled)
 //*offsetWdith (https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetWidth)
-// inner width + padding + border + scrollBar | 0 if hidden
+// inner width + padding + border + scrollBar | 0 if hidden (not scaled)
 //*boundingRect
-// innerWidth + padding + margin + border + scrollBar
+// innerWidth + padding + margin + border + scrollBar (scaled)
 
 
 function getRectAbs(el) {
-  var _rectData;
-
-  if (rectId === el) {
-    return rectCache;
-  }
-
-  var rectData = (_rectData = {
+  var rectData = {
     position: "",
-    //layout box
-    outerX: 0,
-    outerY: 0,
-    outerWidth: 0,
-    outerHeight: 0,
-    //equiv to css vals
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
     //absolute page (absolute) or viewport (fixed) position minus marginLeft/Top
     absX: 0,
-    absY: 0
-  }, _defineProperty(_rectData, "outerWidth", 0), _defineProperty(_rectData, "outerHeight", 0), _defineProperty(_rectData, "offsetX", 0), _defineProperty(_rectData, "offsetY", 0), _defineProperty(_rectData, "width", 0), _defineProperty(_rectData, "height", 0), _rectData);
+    absY: 0,
+    //absolute dimensions including padding, border
+    outerWidth: 0,
+    outerHeight: 0,
+    //position within containing parent minus marginTop/Left
+    offsetX: 0,
+    offsetY: 0,
+    //equivalent to css width
+    width: 0,
+    height: 0
+  };
   var rect = el.getBoundingClientRect();
   var cstyles = window.getComputedStyle(el);
   var elPos = cstyles.position;
@@ -498,29 +487,17 @@ function getRectAbs(el) {
   var paddingV = pxToInt(cstyles.paddingTop) + pxToInt(cstyles.paddingBottom);
   var marginLeft = pxToInt(cstyles.marginLeft);
   var marginTop = pxToInt(cstyles.marginTop);
+  var scrollX = elPos === "fixed" ? 0 : window.pageXOffset;
+  var scrollY = elPos === "fixed" ? 0 : window.pageYOffset;
   rectData.position = elPos;
-  rectData.outerX = elPos !== "fixed" ? rect.x + window.pageXOffset : rect.x;
-  rectData.outerY = elPos !== "fixed" ? rect.y + window.pageYOffset : rect.y;
-  rectData.left = rectData.outerX - marginLeft;
-  rectData.top = rectData.outerY - marginTop;
+  rectData.absX = rect.x + scrollX - marginLeft;
+  rectData.absY = rect.y + scrollY - marginTop;
+  rectData.offsetX = el.offsetLeft - marginLeft;
+  rectData.offsetY = el.offsetTop - marginTop;
   rectData.outerWidth = rect.width;
   rectData.outerHeight = rect.height;
   rectData.width = rectData.outerWidth - borderH - paddingH;
-  ;
-  rectData.height = rectData.outerHeight - borderV - paddingV; //
-
-  rectData.absX = (elPos !== "fixed" ? rect.x + window.pageXOffset : rect.x) - marginLeft;
-  rectData.absY = (elPos !== "fixed" ? rect.y + window.pageYOffset : rect.y) - marginTop;
-  rectData.offsetX = el.offsetLeft;
-  rectData.offsetY = el.offsetTop;
-  rectData.outerWidth = rect.width;
-  rectData.outerHeight = rect.height;
-  rectData.width = rectData.outerWidth - borderH - paddingH;
-  ;
-  rectData.height = rectData.outerHeight - borderV - paddingV; //
-
-  rectId = el;
-  rectCache = rectData;
+  rectData.height = rectData.outerHeight - borderV - paddingV;
   return rectData;
 }
 // CONCATENATED MODULE: ./projects/plugins/dragAndDrop/src/DragAndDrop.js
