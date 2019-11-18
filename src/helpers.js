@@ -18,16 +18,16 @@ function pxToInt(px) {
 // "border-box": outer width = (inner width - padding - border) + padding + border
 
 //*style.width 
-// "inner width"
+// "inner width" (not scaled)
 
 //*clientWdith (https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth)
-// inner width + padding | 0 for inline/css-less
+// inner width + padding | 0 for inline/css-less (not scaled)
 
 //*offsetWdith (https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetWidth)
-// inner width + padding + border + scrollBar | 0 if hidden
+// inner width + padding + border + scrollBar | 0 if hidden (not scaled)
 
 //*boundingRect
-// innerWidth + padding + margin + border + scrollBar
+// innerWidth + padding + margin + border + scrollBar (scaled)
 
 export function getRectAbs(el) {
 	const rectData = {
@@ -76,7 +76,7 @@ export function getRectAbs(el) {
 	rectData.outerWidth = rect.width;
 	rectData.outerHeight = rect.height;
 	
-	rectData.width = rectData.outerWidth - borderH - paddingH;;
+	rectData.width = rectData.outerWidth - borderH - paddingH;
 	rectData.height = rectData.outerHeight - borderV - paddingV;		
 	
 	return rectData;	
