@@ -42,7 +42,7 @@ test("preprocessors return expected default config", ()=>{
 	});	
 	
 	function ass(preprocessor) {
-		const input = [el, getMinWorkingOptions(), null];
+		const input = [el, getMinWorkingOptions(), {}];
 		const name = preprocessor.name;
 		const type = (name === "preprocessMixinConfig") ? "mixin" : "directive";
 		
@@ -139,14 +139,40 @@ test("preprocessors skip clone callbacks if cloneType null", ()=>{
 	ass(preprocessMixinConfig(el, options, {}));	
 });
 
+test("preprocessMixinConfig uses vnode to lookup multi drag property", ()=>{
+	const el = getEl();
+	const options = getMinWorkingOptions();
+	const vnode = {context: {}};
+	
+	options.multi = "mixinTest";
+	vnode.mixinTest = 123;
+	vnode.context.mixinTest = 456;
+	
+	const res = preprocessMixinConfig(el, options, vnode);
+	assert.equal(res.multiDrag(), 123);
+});
+
+test("preprocessDirectiveConfig uses vnode.context to lookup multi drag property", ()=>{
+	const el = getEl();
+	const options = getMinWorkingOptions();
+	const vnode = {context: {}};
+	
+	options.multi = "mixinTest";
+	vnode.mixinTest = 123;
+	vnode.context.mixinTest = 456;
+	
+	const res = preprocessDirectiveConfig(el, options, vnode);
+	assert.equal(res.multiDrag(), 456);	
+});
+
 test("preprocessMixinConfig throws if draggable element is not an HTML element", ()=>{
 	assert.throws(()=>{ preprocessMixinConfig(); }, {message: /not an HTML element/});
 });
 
 test("preprocessors throw if arg is not 'draggable' / 'droppable'", ()=>{
 	const el = getEl();
-	assert.throws(()=>{ preprocessDirectiveConfig(el); }, {message: /Invalid directive mode/});
-	assert.throws(()=>{ preprocessMixinConfig(el); }, {message: /Invalid directive mode/});
+	assert.throws(()=>{ preprocessDirectiveConfig(el, {}, {}); }, {message: /Invalid directive mode/});
+	assert.throws(()=>{ preprocessMixinConfig(el, {}, {}); }, {message: /Invalid directive mode/});
 });
 
 test("preprocessors throw if the selector option does not return DOM element", ()=>{
@@ -175,8 +201,8 @@ test("preprocessors throw if an undefined event is received in the store callbac
 test("preprocessors throw if Vuex has not been registered", ()=>{
 	const el = getEl();
 	registerVuexInstance(null, null, true);
-	assert.throws(()=>{ preprocessDirectiveConfig(el); }, {message: /has not been installed/});
-	assert.throws(()=>{ preprocessMixinConfig(el); }, {message: /has not been installed/});	
+	assert.throws(()=>{ preprocessDirectiveConfig(el, {}, {}); }, {message: /has not been installed/});
+	assert.throws(()=>{ preprocessMixinConfig(el, {}, {}); }, {message: /has not been installed/});	
 });
 
 test("registerVuexInstance sets connection to vuex dispatch", ()=>{

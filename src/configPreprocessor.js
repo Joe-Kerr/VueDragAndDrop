@@ -82,7 +82,7 @@ function preprocessConfig(options={}, vnode) {
 		type: options.type,
 		elMoving: (options.selector === undefined) ? null : getEl(options.selector),
 		data: options.data || {},	
-		multiDrag: (options.multi !== undefined) ? ()=>vnode.context[options.multi] : null,	
+		multiDrag: (options.multi !== undefined) ? ()=>vnode[options.multi] : null,	
 		cloneType: (options.cloneType !== undefined) ? options.cloneType: "copy",
 		cloneWillChangeThreshold: (options.cloneType !== undefined) ? options.cloneWillChangeThreshold : 0			
 	};
@@ -101,7 +101,7 @@ export function preprocessMixinConfig(el, options, vnode) {
 }
 
 export function preprocessDirectiveConfig(el, mergedDirectiveOptions, vnode) {
-	const config = preprocessConfig(mergedDirectiveOptions, vnode);
+	const config = preprocessConfig(mergedDirectiveOptions, vnode.context);
 	config.callbacks = setupCallbacks(config, mergedDirectiveOptions);
 	if(config.elMoving === null) {config.elMoving = el;}
 	
