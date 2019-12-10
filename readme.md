@@ -273,6 +273,10 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.3
+Fix: hotDND multidrag failed because mixin config processor used incorrect property on vnode
+Fix: Loose equal in test hid test setup error
+
 ### 1.2.2
 Fix: Helper threw for float pixel values instead of converting them to int
 

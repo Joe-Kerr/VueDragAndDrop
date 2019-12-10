@@ -1,6 +1,6 @@
 {
   "name": "@joe_kerr/vue-drag-and-drop",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Vue plugin for complex drag and drop logic.",
   "main": "./src/index.js",
   "module": "./src/index.js",
