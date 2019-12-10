@@ -4,9 +4,9 @@ function pxToInt(px) {
 	}
 	
 	const intVal = parseInt(px.replace("px", ""));
-	const test = ""+intVal;
+	const test = ""+px;
 	
-	if(test.length+2 !== px.length || !px.endsWith("px") || isNaN(intVal)) {
+	if(test.indexOf(" ") > -1 || !px.endsWith("px") || isNaN(intVal)) {
 		throw new Error("Failed to parse pixel value. Got: "+px);
 	}
 	

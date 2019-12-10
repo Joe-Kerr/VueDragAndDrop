@@ -7,7 +7,7 @@ Unit test report
   cloneController.js
     √ createClone does nothing if type null
     √ createClone creates one DOM node as cloneAnchor 
-    √ createClone creates child DOM nodes of draggables parameter
+    √ createClone creates child DOM nodes of draggables parameter 
     √ createClone sets willChange according to config 
     √ updateClone updates transform property of clone anchor
     √ destroyClone removes clone from DOM

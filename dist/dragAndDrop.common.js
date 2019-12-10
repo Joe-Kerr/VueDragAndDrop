@@ -431,9 +431,9 @@ function pxToInt(px) {
   }
 
   var intVal = parseInt(px.replace("px", ""));
-  var test = "" + intVal;
+  var test = "" + px;
 
-  if (test.length + 2 !== px.length || !px.endsWith("px") || isNaN(intVal)) {
+  if (test.indexOf(" ") > -1 || !px.endsWith("px") || isNaN(intVal)) {
     throw new Error("Failed to parse pixel value. Got: " + px);
   }
 

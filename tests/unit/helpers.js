@@ -143,6 +143,9 @@ test("getRectAbs throws for invalid pixel values", ()=>{
 	assert.throws(()=>{ getRectAbs(el); }, {message: /Failed to parse pixel value/});
 		
 	dataFail = "10em";
-	assert.throws(()=>{ getRectAbs(el); }, {message: /Failed to parse pixel value/});
+	assert.throws(()=>{ getRectAbs(el); }, {message: /Failed to parse pixel value/});		
 	
+	//false positive
+	dataFail = "4.2px";
+	assert.doesNotThrow(()=>{ getRectAbs(el); });
 });
