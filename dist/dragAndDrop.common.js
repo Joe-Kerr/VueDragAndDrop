@@ -1219,7 +1219,7 @@ function preprocessConfig() {
     elMoving: options.selector === undefined ? null : getEl(options.selector),
     data: options.data || {},
     multiDrag: options.multi !== undefined ? function () {
-      return vnode.context[options.multi];
+      return vnode[options.multi];
     } : null,
     cloneType: options.cloneType !== undefined ? options.cloneType : "copy",
     cloneWillChangeThreshold: options.cloneType !== undefined ? options.cloneWillChangeThreshold : 0
@@ -1234,7 +1234,7 @@ function preprocessMixinConfig(el, options, vnode) {
   return config;
 }
 function preprocessDirectiveConfig(el, mergedDirectiveOptions, vnode) {
-  var config = preprocessConfig(mergedDirectiveOptions, vnode);
+  var config = preprocessConfig(mergedDirectiveOptions, vnode.context);
   config.callbacks = setupCallbacks(config, mergedDirectiveOptions);
 
   if (config.elMoving === null) {

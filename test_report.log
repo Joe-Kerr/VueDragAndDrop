@@ -17,6 +17,8 @@ Unit test report
     √ preprocessors return expected config when changed by user
     √ preprocessors skip store callbacks if draggableOnly
     √ preprocessors skip clone callbacks if cloneType null
+    √ preprocessMixinConfig uses vnode to lookup multi drag property
+    √ preprocessDirectiveConfig uses vnode.context to lookup multi drag property
     √ preprocessMixinConfig throws if draggable element is not an HTML element
     √ preprocessors throw if arg is not 'draggable' / 'droppable'
     √ preprocessors throw if the selector option does not return DOM element
@@ -102,7 +104,7 @@ Unit test report
     √ Get response from mixin 
 
 
-  77 passing 
+  79 passing 
 
  MOCHA  Tests completed successfully
 

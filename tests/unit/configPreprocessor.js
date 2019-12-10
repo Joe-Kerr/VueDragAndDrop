@@ -64,7 +64,6 @@ test("preprocessors return expected config when changed by user", ()=>{
 	const elSource = document.createElement("div");
 	const elMoving = document.createElement("div");
 	const data = {};
-	const vnode = {context: {multi: [1,2,3]}};
 	
 	elSource.id = "source";
 	elMoving.id = "moving";
@@ -76,7 +75,7 @@ test("preprocessors return expected config when changed by user", ()=>{
 		only: true,
 		selector: "moving",
 		data,
-		multiDrag: "multi",
+		multi: "multi",
 		cloneType: "cheap",
 		cloneWillChangeThreshold: 2		
 	};
@@ -91,14 +90,14 @@ test("preprocessors return expected config when changed by user", ()=>{
 		assert.equal(_config.draggableOnly, true);
 		assert.equal(_config.elMoving, elMoving);
 		assert.equal(_config.data, data);
-		assert.equal(_config.multiDrag, vnode.multi);
+		assert.equal(typeof _config.multiDrag, "function");
 		assert.equal(_config.cloneType, "cheap");
 		assert.equal(_config.cloneWillChangeThreshold, 2);	
 		assert.equal(_config.callbacks.constructor.name, "PubSub");
 	}
 	
-	ass(preprocessDirectiveConfig(elSource, user, vnode));
-	ass(preprocessMixinConfig(elSource, user, vnode));
+	ass(preprocessDirectiveConfig(elSource, user, {}));
+	ass(preprocessMixinConfig(elSource, user, {}));
 	
 	document.body.removeChild(elMoving);
 });
