@@ -273,6 +273,9 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.2
+Fix: Helper threw for float pixel values instead of converting them to int
+
 ### 1.2.1
 Fix: Logic error in pixel parser helper
 Fix: Removed caching in helper which was broken beyond good and evil
