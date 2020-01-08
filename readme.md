@@ -273,6 +273,9 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.4
+New: Added draggable or droppable DOM event to drag and drop event data
+
 ### 1.2.3
 Fix: hotDND multidrag failed because mixin config processor used incorrect property on vnode
 Fix: Loose equal in test hid test setup error
