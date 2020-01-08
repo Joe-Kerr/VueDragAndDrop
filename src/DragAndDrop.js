@@ -25,7 +25,9 @@ const dragAndDropParameters = {
 	droppableX: null,
 	droppableY: null,	
 	droppableType: null,		
-	droppableData: null
+	droppableData: null,
+	
+	eventTarget: null
 };
 
 const defaultDragging = function defaultDragging(_event) {
@@ -191,7 +193,9 @@ class DragAndDrop {
 		params.droppableX = xy.offsetX;
 		params.droppableY = xy.offsetY;
 		params.endX = event.pageX;
-		params.endY = event.pageY;				
+		params.endY = event.pageY;
+
+		params.eventTarget = event;		
 	}	
 	
 	_writeDraggableParameters(params, el, event, config, data) {
@@ -214,6 +218,8 @@ class DragAndDrop {
 		params.draggableNewY = params.draggableY;
 
 		params.draggableList = this._getDraggableList(el, config);
+		
+		params.eventTarget = event;
 	}
 	
 	_mouseup(el, event, config, data) {

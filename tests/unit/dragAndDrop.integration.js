@@ -228,7 +228,9 @@ test("all callbacks fire with parameters", async ()=>{
 		"droppableX",
 		"droppableY",	
 		"droppableType",		
-		"droppableData"
+		"droppableData",
+		
+		"eventTarget"
 	];	
 	
 	function assertAllParamsPresent(allParams, cbParams) {

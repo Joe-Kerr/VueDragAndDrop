@@ -523,7 +523,8 @@ var dragAndDropParameters = {
   droppableX: null,
   droppableY: null,
   droppableType: null,
-  droppableData: null
+  droppableData: null,
+  eventTarget: null
 };
 
 var defaultDragging = function defaultDragging(_event) {
@@ -711,6 +712,7 @@ function () {
       params.droppableY = xy.offsetY;
       params.endX = event.pageX;
       params.endY = event.pageY;
+      params.eventTarget = event;
     }
   }, {
     key: "_writeDraggableParameters",
@@ -733,6 +735,7 @@ function () {
       params.draggableNewX = params.draggableX;
       params.draggableNewY = params.draggableY;
       params.draggableList = this._getDraggableList(el, config);
+      params.eventTarget = event;
     }
   }, {
     key: "_mouseup",
