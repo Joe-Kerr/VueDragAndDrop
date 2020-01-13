@@ -204,7 +204,7 @@ test("if dragging aborted by removeEventListener, dragstop callback gets proper 
 });
 
 //jsdom does not provide pageX/Y
-test("all callbacks fire with parameters", async ()=>{
+test("all private callbacks fire with expected parameter properties", async ()=>{
 	const dndParameters = [
 		"startX",
 		"startY",

@@ -38,7 +38,7 @@ Unit test report
     √ all droppable mouseup callbacks fire before evaluation function
     √ call to removeEventListener mid dragging prevents droppable mouseup callbacks 
     √ if dragging aborted by removeEventListener, dragstop callback gets proper data parameters 
-    √ all callbacks fire with parameters 
+    √ all private callbacks fire with expected parameter properties 
     √ optional custom dragstart callback fires 
     √ optional custom drag callback fires 
     √ optional custom dragstop callbacks fire when not over droppable 
@@ -115,35 +115,47 @@ System test report
 
 
 
-  Drag and drop
-    √ draggable over matching droppable fires 
-    √ draggable over non-matching droppable doesn't fire 
-    √ draggable over two matching droppables fires twice 
-    √ draggable over two droppables where first matches fires for first 
-    √ draggable over two droppables where second matches fires for second 
-    √ draggable over two matching droppables where first is greedy fires for first 
-    √ draggable over obstructing child of matching droppable fires 
-    √ draggable without droppable fires dragstop / doesn't fire for droppables 
-    √ draggable that is also droppable doesn't fire for itself 
-
   Dragging general
-    √ draggableFree draggable can be dragged when container is scrolled 
-    √ draggableFree draggable can be dragged when container is not scrolled 
-    √ draggableFreeFixed draggable can be dragged when container is scrolled 
-    √ draggableFreeFixed draggable can be dragged when container is not scrolled 
-    √ draggableWithStyle draggable can be dragged when container is scrolled 
-    √ draggableWithStyle draggable can be dragged when container is not scrolled 
-    √ clone of draggableFree draggbale renders before mousemove when container is scrolled 
-    √ clone of draggableFree draggbale renders before mousemove when container is not scrolled 
-    √ clone of draggableFreeFixed draggbale renders before mousemove when container is scrolled 
-    √ clone of draggableFreeFixed draggbale renders before mousemove when container is not scrolled 
-    √ clone of draggableWithStyle draggbale renders before mousemove when container is scrolled 
-    √ clone of draggableWithStyle draggbale renders before mousemove when container is not scrolled 
-
-  Multi dragging
-    √ subset of fixed and absolute draggables can be dragged when container scrolled 
-    √ clones of fixed and absolute draggable subset render before mousemove when container scrolled 
+    √ drag and drop provides expected public dragstart parameters 
+    1) drag and drop provides expected public dragmove parameters
+    √ drag and drop provides expected public dragstop parameters 
+    √ drag and drop provides expected public store action parameters 
 
 
-  23 passing 
+  3 passing 
+  1 failing
+
+  1) Dragging general
+       drag and drop provides expected public dragmove parameters:
+
+      AssertionError [ERR_ASSERTION]: Expected values to be loosely deep-equal:
+
+{
+  pageX: 0,
+  pageY: 0,
+  type: 'mousedown'
+}
+
+should loosely deep-equal
+
+{
+  pageX: 400,
+  pageY: 300,
+  type: 'mousemove'
+}
+      + expected - actual
+
+       {
+      -  "pageX": 0
+      -  "pageY": 0
+      -  "type": "mousedown"
+      +  "pageX": 400
+      +  "pageY": 300
+      +  "type": "mousemove"
+       }
+      
+      at Context.<anonymous> (vue_projects\projects\plugins\dragAndDrop\tests\system\dragAndDropParameters.js:153:9)
+      at processTicksAndRejections (internal/process/task_queues.js:93:5)
+
+
 

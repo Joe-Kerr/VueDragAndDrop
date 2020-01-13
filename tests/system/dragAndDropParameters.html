@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="pragma" content="no-cache">			
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'  https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js" />
+		
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js"></script>
+		
+		<style>			
+			body {
+				width: 2048px;
+				height: 2048px;
+				margin: 0;
+			}
+			
+			.dnd {				
+				width: 120px;
+				height: 40px;
+				
+				border: 1px solid blue;
+				z-index: 2;
+				background-color: white;
+			}
+		</style>
+
+		<title>ready</title>
+	</head>
+
+<body>
+
+<div id="v"></div>
+
+<script src="../../dist/dragAndDrop.umd.js"></script>
+
+<script>
+function filterCircularRefs(params) {
+	params.droppableEl = params.droppableEl || {};
+	params.droppableEl = {id: params.droppableEl.id};				
+	
+	params.draggableEl = params.draggableEl || {};
+	params.draggableEl = {id: params.draggableEl.id};
+	
+	params.draggableList = params.draggableList || [];
+	params.draggableList = params.draggableList.map((el)=>({id: el.id}));;
+	
+	params.eventTarget = {type: params.eventTarget.type, pageX: params.eventTarget.pageX, pageY: params.eventTarget.pageY};
+	
+	//console.log(params);
+	return JSON.stringify(params);
+}
+
+const installer = dragAndDrop.installer;
+
+
+(function() {
+	const store = new Vuex.Store({
+		state: {
+			storeParameters: null
+		},
+		actions: {
+			dndStoreParameterTest(store, data) {
+				store.state.storeParameters = filterCircularRefs(data);
+			}
+		}
+	});
+	
+	Vue.use(installer, {vuex: store})  
+
+	window.v = new Vue({
+		el: "#v",
+		mixins: [dragAndDrop.hotDNDMixin],
+		store,
+		template: `
+			<section>	
+				<div id="wrapper" :style="scaleStyle">
+					
+					<div id="draggable" class="dnd" ref="draggable" v-drag&drop:draggable="{type: 'drag', data: 123, cloneType: 'copy', dragstart, dragmove, dragstop}"></div>
+					
+					<div id="droppable" class="dnd" ref="droppable" style="position: absolute; left: 390px; top: 290px;" v-drag&drop:droppable="{type: 'drop', data: 456}"></div>
+
+					<div id="dragstartParams">{{dragstartParams}}</div>
+					<div id="dragParams">{{dragParams}}</div>
+					<div id="dragstopParams">{{dragstopParams}}</div>
+					<div id="storeParams">{{storeParams}}</div>
+					
+				</div>
+
+				<button @click="reset" id="reset" style="position: fixed; right: 0px; bottom: 0px;">r</button>
+				<button @click="scale=0.5" id="scale" style="position: fixed; right: 20px; bottom: 0px;">scale</button>
+				<button @click="scale=1" id="unscale" style="position: fixed; right: 70px; bottom: 0px;">unscale</button>				
+			</section>
+		`,
+		computed: {
+			scaleStyle() {
+				const style = {};
+				
+				if(this.scale != 1) {
+					style.transform = "scale("+this.scale+")";
+					style.transformOrigin = "0 0";
+				}
+				
+				return style;
+			},
+			
+			storeParams() {
+				return this.$store.state.storeParameters;
+			}
+		},
+		data() {
+			return {
+				dragstartParams: null,
+				dragParams: null,
+				dragstopParams: null,
+				scale: 1
+			}
+		},
+		methods: {
+			dragstart(eventName, data) { this.dragstartParams = this.filterCircularRefs(data); },
+			dragmove(eventName, data) { this.dragParams = this.filterCircularRefs(data); },
+			dragstop(eventName, data) { this.dragstopParams = this.filterCircularRefs(data); },
+			
+			move(event) {
+				const el = event.target;
+
+				if(el === null) return;
+				
+				const config = {
+					only: true,
+					mode: "draggable",
+					data: 123,
+					cloneType: "copy",
+					"dragstart": (eventName, data)=>{ this.dragstartParams = this.filterCircularRefs(data); },
+					"dragmove": (eventName, data)=>{ this.dragParams = this.filterCircularRefs(data); },
+					"dragstop": (eventName, data)=>{ this.dragstopParams = this.filterCircularRefs(data); }		
+				};
+			
+				this.hotDND(el, config, event);	
+			},
+			
+			filterCircularRefs(params) {
+				return filterCircularRefs(params);
+			},
+			
+			reset() {
+				document.title = "reloading";
+				window.location.reload(false);
+			}
+		},
+		
+		created() {
+			this.$store.dispatch("drag&drop/register", {dragType: "drag", dropType: "drop", action: "dndStoreParameterTest"});
+		}
+	
+	});
+})()
+</script>
+
+</body>
+</html>
