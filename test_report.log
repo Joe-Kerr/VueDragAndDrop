@@ -117,45 +117,10 @@ System test report
 
   Dragging general
     √ drag and drop provides expected public dragstart parameters 
-    1) drag and drop provides expected public dragmove parameters
+    √ drag and drop provides expected public dragmove parameters 
     √ drag and drop provides expected public dragstop parameters 
     √ drag and drop provides expected public store action parameters 
 
 
-  3 passing 
-  1 failing
-
-  1) Dragging general
-       drag and drop provides expected public dragmove parameters:
-
-      AssertionError [ERR_ASSERTION]: Expected values to be loosely deep-equal:
-
-{
-  pageX: 0,
-  pageY: 0,
-  type: 'mousedown'
-}
-
-should loosely deep-equal
-
-{
-  pageX: 400,
-  pageY: 300,
-  type: 'mousemove'
-}
-      + expected - actual
-
-       {
-      -  "pageX": 0
-      -  "pageY": 0
-      -  "type": "mousedown"
-      +  "pageX": 400
-      +  "pageY": 300
-      +  "type": "mousemove"
-       }
-      
-      at Context.<anonymous> (vue_projects\projects\plugins\dragAndDrop\tests\system\dragAndDropParameters.js:153:9)
-      at processTicksAndRejections (internal/process/task_queues.js:93:5)
-
-
+  4 passing 
 

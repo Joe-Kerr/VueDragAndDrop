@@ -235,7 +235,14 @@ class DragAndDrop {
 
 		this._setTempStyle();
 
-		dragging = function draggingWithCallback(event) {defaultDragging(event); callbacks.notify("dragmove", dragAndDropParameters);}
+		dragging = function mousemoveCallback(event) {
+			defaultDragging(event); 
+			
+			//Writing it here for performance reasons.
+			dragAndDropParameters.eventTarget = event;
+			
+			callbacks.notify("dragmove", dragAndDropParameters);
+		}
 		
 		document.addEventListener("mousemove", dragging);	
 		

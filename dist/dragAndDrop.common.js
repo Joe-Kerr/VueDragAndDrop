@@ -787,8 +787,10 @@ function () {
 
       this._setTempStyle();
 
-      dragging = function draggingWithCallback(event) {
-        defaultDragging(event);
+      dragging = function mousemoveCallback(event) {
+        defaultDragging(event); //Writing it here for performance reasons.
+
+        dragAndDropParameters.eventTarget = event;
         callbacks.notify("dragmove", dragAndDropParameters);
       };
 
