@@ -13,6 +13,28 @@ function pxToInt(px) {
 	return intVal;
 }
 
+// https://stackoverflow.com/a/20407357
+function getCalculatedOffset(el, rect, scrollX, scrollY) {
+	const bailVpPos = {x:0, y:0};
+	const getVpPos = function getVpPos(el) {
+        if(el === null || el.parentNode === null || el.parentNode.tagName === undefined) {
+			return bailVpPos;
+		}
+		else if(el.parentNode.tagName.toLowerCase() === 'svg') {
+            return el.parentNode.getBoundingClientRect();
+        }
+        return getVpPos(el.parentNode);
+    }   
+
+   const elPos = rect;
+   const vpPos = getVpPos(el);
+   
+   return {
+        y: elPos.y - vpPos.y + 2*scrollY,
+        x: elPos.x - vpPos.x + 2*scrollX
+    };	
+}
+
 //* General: https://developer.mozilla.org/en-US/docs/Web/API/CSS_Object_Model/Determining_the_dimensions_of_elements
 //			 https://docs.microsoft.com/en-us/previous-versions//hh781509(v=vs.85)
 
@@ -68,13 +90,15 @@ export function getRectAbs(el) {
 	const scrollX = (elPos === "fixed") ? 0 : window.pageXOffset;
 	const scrollY = (elPos === "fixed") ? 0 : window.pageYOffset;
 	
+	const offset = (el.offsetLeft !== undefined) ? {x: el.offsetLeft, y: el.offsetTop} : getCalculatedOffset(el, rect, scrollX, scrollY);
+	
 	rectData.position = elPos;
 		
 	rectData.absX = rect.x + scrollX - marginLeft;
 	rectData.absY = rect.y + scrollY - marginTop;
 	
-	rectData.offsetX = el.offsetLeft - marginLeft;
-	rectData.offsetY = el.offsetTop - marginTop;
+	rectData.offsetX = offset.x - marginLeft;
+	rectData.offsetY = offset.y - marginTop;
 	
 	rectData.outerWidth = rect.width;
 	rectData.outerHeight = rect.height;

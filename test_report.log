@@ -67,6 +67,8 @@ Unit test report
   helpers.js
     √ getRectAbs extracts expected values from absolute DOM node
     √ getRectAbs extracts expected values from fixed DOM node
+    √ getRectAbs uses fallback if SVG element's offset coordinates not available
+    √ getRectAbs uses only element's rect for non-SVG element that has no offset coordinates
     √ getRectAbs returns expected data object
     √ getRectAbs throws for invalid pixel values
 
@@ -104,7 +106,7 @@ Unit test report
     √ Get response from mixin 
 
 
-  79 passing 
+  81 passing 
 
  MOCHA  Tests completed successfully
 

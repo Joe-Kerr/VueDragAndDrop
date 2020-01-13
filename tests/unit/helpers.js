@@ -33,8 +33,13 @@ const el = {
 	offsetTop: 200,
 	getBoundingClientRect: ()=>({x, y, width, height}),
 	parentNode: {
-		style: {transform: ""},
-		parentNode: {
+		tagName: "WHATEVER",
+		
+		style: {transform: ""},		
+		parentNode: {			
+			tagName: "SVG",
+			getBoundingClientRect: ()=>({x:3, y:4}),
+			
 			style: {transform: ""},
 			parentNode: {
 				parentNode: null
@@ -122,6 +127,64 @@ parameterizedTests.forEach((testData, i)=>{
 //
 // Manual tests
 //
+
+test("getRectAbs uses fallback if SVG element's offset coordinates not available", ()=>{
+	const backup = {x: el.offsetLeft, y: el.offsetTop};
+	el.offsetLeft = undefined;
+	el.offsetTop = undefined;
+	
+	position = "absolute";
+	const expected = {
+		position: "absolute",
+		absX: 10 + 22 - 26,
+		absY: 20 + 32 - 28,
+		offsetX: (10 - 3) + (2 * 22) - 26,
+		offsetY: (20 - 4) + (2 * 32) - 28,
+		outerWidth: 30,
+		outerHeight: 40,
+		width: 30 - 10-12 - 18-20,
+		height: 40 - 14-16 - 22-24
+	};	
+	
+	const res = getRectAbs(el);	
+
+	for(const prop in expected) {
+		assert.equal(res[prop], expected[prop], "Assertion failed for '"+prop+"'.");
+	}
+	
+	el.offsetLeft = backup.x;
+	el.offsetTop = backup.y;	
+});
+
+test("getRectAbs uses only element's rect for non-SVG element that has no offset coordinates", ()=>{
+	const backup = {x: el.offsetLeft, y: el.offsetTop};
+	el.offsetLeft = undefined;
+	el.offsetTop = undefined;
+	el.parentNode.parentNode.tagName = "notSVG";
+	
+	position = "absolute";
+	const expected = {
+		position: "absolute",
+		absX: 10 + 22 - 26,
+		absY: 20 + 32 - 28,
+		offsetX: (10 - 0) + (2 * 22) - 26,
+		offsetY: (20 - 0) + (2 * 32) - 28,
+		outerWidth: 30,
+		outerHeight: 40,
+		width: 30 - 10-12 - 18-20,
+		height: 40 - 14-16 - 22-24
+	};	
+	
+	const res = getRectAbs(el);	
+
+	for(const prop in expected) {
+		assert.equal(res[prop], expected[prop], "Assertion failed for '"+prop+"'.");
+	}
+	
+	el.offsetLeft = backup.x;
+	el.offsetTop = backup.y;	
+	el.parentNode.parentNode.tagName = "SVG";
+});
 
 test("getRectAbs returns expected data object", ()=>{
 	const expected = ["position", "absX", "absY", "outerWidth", "outerHeight", "offsetX", "offsetY", "width", "height"].sort();
