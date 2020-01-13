@@ -274,21 +274,21 @@ For cases when you just need to move an element.
 ## Versions
 
 ### 1.2.4
-New: Added draggable or droppable DOM event to drag and drop event data
+- New: Added draggable or droppable DOM event to drag and drop event data
 
 ### 1.2.3
-Fix: hotDND multidrag failed because mixin config processor used incorrect property on vnode
-Fix: Loose equal in test hid test setup error
+- Fix: hotDND multidrag failed because mixin config processor used incorrect property on vnode
+- Fix: Loose equal in test hid test setup error
 
 ### 1.2.2
-Fix: Helper threw for float pixel values instead of converting them to int
+- Fix: Helper threw for float pixel values instead of converting them to int
 
 ### 1.2.1
-Fix: Logic error in pixel parser helper
-Fix: Removed caching in helper which was broken beyond good and evil
-Fix: Drag & drop should now be independent of parent nodes' layout style
+- Fix: Logic error in pixel parser helper
+- Fix: Removed caching in helper which was broken beyond good and evil
+- Fix: Drag & drop should now be independent of parent nodes' layout style
 
-Chg: General cleanup in code and tests
+- Chg: General cleanup in code and tests
 
 ### 1.2.0
 - New: Added hot drag&drop. Allows init drag and drop operation programmatically
