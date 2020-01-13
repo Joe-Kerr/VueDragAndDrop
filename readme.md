@@ -273,6 +273,11 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.5
+- New: Added system tests for drag and drop callback parameters
+- Fix: Dragmove callback received mousedown event instead of mousemove event
+- Fix: Dragging SVG elements without offsetLeft/-Top produced incorrect element coordinates
+
 ### 1.2.4
 - New: Added draggable or droppable DOM event to drag and drop event data
 
