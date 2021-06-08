@@ -10,16 +10,24 @@ function mergeDirectiveOptions(arg, value={}, mods={}) {
 
 function dragAndDrop(store, subsystems) {
 	const dragAndDrop = subsystems.dragAndDropInstance;
-
+	
+	function create(el, context, vnode) {
+		const config = subsystems.preprocessDirectiveConfig(el, mergeDirectiveOptions(context.arg, context.value, context.modifiers), vnode);
+		dragAndDrop.addEventListener(el, config.elMoving, config, config.data, config.callbacks);			
+	}
+	
+	function destroy(el, context, vnode) {
+		dragAndDrop.removeEventListener(context.arg, el);
+	}
+	
 	return {
-		inserted(el, context, vnode) {
-			const config = subsystems.preprocessDirectiveConfig(el, mergeDirectiveOptions(context.arg, context.value, context.modifiers), vnode);
-			dragAndDrop.addEventListener(el, config.elMoving, config, config.data, config.callbacks);			
-		},
+		//vue2
+		inserted: create,
+		unbind: destroy,
 		
-		unbind(el, context, vnode) {
-			dragAndDrop.removeEventListener(context.arg, el);
-		}
+		//vue3
+		mounted: create,
+		unmounted: destroy
 	}
 }
 
