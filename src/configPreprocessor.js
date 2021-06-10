@@ -62,7 +62,7 @@ function setupCallbacks(config, userCallbacks) {
 	
 	if(typeof userCallbacks.drag === "function") {console.error("DEPRECATED: use 'dragmove' instead of 'drag' as a drag and drop config property."); callbacks.subscribe("dragmove", userCallbacks.drag);}
 	if(typeof userCallbacks.dragmove === "function") {callbacks.subscribe("dragmove", userCallbacks.dragmove);}
-	if(typeof userCallbacks.dragstop === "function") {callbacks.subscribe("droppedAll", userCallbacks.dragstop);}
+	if(typeof userCallbacks.dragstop === "function") {callbacks.subscribe("droppingOver", userCallbacks.dragstop);}
 	if(typeof userCallbacks.dragstart === "function") {callbacks.subscribe("dragstart", userCallbacks.dragstart);}
 	
 	return callbacks;	

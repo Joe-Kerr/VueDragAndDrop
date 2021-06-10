@@ -4,7 +4,7 @@ const testSuite = require("../../../../../../+test_common/webdriverSuite.js");
 //to=test objects
 let driver, to={};
 
-suite.only("Dragging general");
+suite("Dragging general");
 
 async function scrollTo(x, y) {
 	return driver.executeScript("window.scroll("+x+","+y+");");
@@ -166,7 +166,8 @@ test("drag and drop provides expected public dragstop parameters", async ()=>{
 		droppableEl: (params)=>({id: "droppable"}),
 		droppableX: (params)=>(droppableRect.x),
 		droppableY: (params)=>(droppableRect.y),
-		droppableType: (params)=>("drop")		
+		droppableType: (params)=>("drop"),
+		droppableData: (params)=>(456)			
 	};
 	new DefaultAsserts(modifiedAssertions, before, after, mx0, my0, mxEnd, myEnd).assert(dragstopParams);
 		
