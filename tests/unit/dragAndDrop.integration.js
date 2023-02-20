@@ -431,3 +431,32 @@ test("hotDND drop interops with draggable listeners", async ()=>{
 	sample.removeEventListener("draggable", draggable);
 	document.body.removeChild(draggable);	
 });
+
+test("a draggable event must precede a droppable event; otherwise void", async ()=>{
+	const callbackTest = new sinon.fake();
+	const cbs = callbacks();	
+	const dragsstop = cbs.getEvent("dragstopAlways");
+	
+	cbs.subscribe(dragsstop, callbackTest);
+	
+	const draggable1 = addElWithListener(sample, "draggable", {callbacks: cbs});
+	const droppable1 = addElWithListener(sample, "droppable", {callbacks: cbs});	
+	const droppable2 = addElWithListener(sample, "droppable", {callbacks: cbs});	
+	
+	await trigger("mousedown", droppable1);	
+	await trigger("mouseup", droppable1);	
+	assert.strictEqual(callbackTest.callCount, 0);	
+	
+	await trigger("mousedown", draggable1);	
+	assert.strictEqual(callbackTest.callCount, 0);	
+
+	await trigger("mouseup", droppable2);		
+	assert.strictEqual(callbackTest.callCount, 1);	
+
+	sample.removeEventListener("draggable", draggable1);
+	sample.removeEventListener("droppable", droppable1);
+	sample.removeEventListener("droppable", droppable2);
+	document.body.removeChild(draggable1);
+	document.body.removeChild(droppable1);		
+	document.body.removeChild(droppable2);		
+});

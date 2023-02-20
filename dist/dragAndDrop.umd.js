@@ -421,14 +421,23 @@ function mergeDirectiveOptions(arg) {
 
 function dragAndDrop(store, subsystems) {
   var dragAndDrop = subsystems.dragAndDropInstance;
+
+  function create(el, context, vnode) {
+    var config = subsystems.preprocessDirectiveConfig(el, mergeDirectiveOptions(context.arg, context.value, context.modifiers), vnode);
+    dragAndDrop.addEventListener(el, config.elMoving, config, config.data, config.callbacks);
+  }
+
+  function destroy(el, context, vnode) {
+    dragAndDrop.removeEventListener(context.arg, el);
+  }
+
   return {
-    inserted: function inserted(el, context, vnode) {
-      var config = subsystems.preprocessDirectiveConfig(el, mergeDirectiveOptions(context.arg, context.value, context.modifiers), vnode);
-      dragAndDrop.addEventListener(el, config.elMoving, config, config.data, config.callbacks);
-    },
-    unbind: function unbind(el, context, vnode) {
-      dragAndDrop.removeEventListener(context.arg, el);
-    }
+    //vue2
+    inserted: create,
+    unbind: destroy,
+    //vue3
+    mounted: create,
+    unmounted: destroy
   };
 }
 
@@ -778,6 +787,10 @@ function () {
   }, {
     key: "_mouseup",
     value: function _mouseup(el, event, config, data) {
+      if (this.isDragging === false) {
+        return;
+      }
+
       this.droppables.push({
         el: el,
         data: data,
@@ -1236,7 +1249,7 @@ function setupCallbacks(config, userCallbacks) {
   }
 
   if (typeof userCallbacks.dragstop === "function") {
-    callbacks.subscribe("droppedAll", userCallbacks.dragstop);
+    callbacks.subscribe("droppingOver", userCallbacks.dragstop);
   }
 
   if (typeof userCallbacks.dragstart === "function") {

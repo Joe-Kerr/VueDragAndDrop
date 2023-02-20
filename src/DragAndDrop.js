@@ -223,6 +223,10 @@ class DragAndDrop {
 	}
 	
 	_mouseup(el, event, config, data) {
+		if(this.isDragging === false) {
+			return;
+		}
+		
 		this.droppables.push({el, data, type: config.droppableType, greedy: config.greedy});
 	}
 	
