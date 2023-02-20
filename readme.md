@@ -273,6 +273,9 @@ For cases when you just need to move an element.
 
 ## Versions
 
+### 1.2.6
+- Fix: A draggable event must precede a droppable event; otherwise void.
+
 ### 1.2.5
 - New: Added system tests for drag and drop callback parameters
 - Fix: Dragmove callback received mousedown event instead of mousemove event
